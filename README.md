@@ -99,6 +99,20 @@ Structured logs with four levels (`debug` / `info` / `warning` / `error`) and cu
 
 </td>
 </tr>
+<tr>
+<td width="50%" valign="top">
+
+### Deep Link Tester
+Test any URL scheme or universal link without leaving the app. Input a URL, tap **Fire**, see if it opened or failed. Save **favorites** for reuse. Full **history** with result badges, timestamps, and persistence across launches.
+
+</td>
+<td width="50%" valign="top">
+
+### Developer Experience
+**Zero dependencies** — pure Swift, no third-party libraries. **One-line setup** — `Noober.shared.start()`. **Swift 6 concurrency** — `@MainActor` stores, `nonisolated` logging, `Sendable` models. **Auto-cleanup** — max 500 requests, 500 logs, 100 deep link history entries.
+
+</td>
+</tr>
 </table>
 
 ---

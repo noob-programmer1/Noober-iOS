@@ -229,6 +229,7 @@ Noober.shared.log("Event fired", category: .init("analytics"))
 | Persist rules across launches | UserDefaults storage |
 | Persist environment selection | UserDefaults storage |
 | Persist QA checklist per build | UserDefaults keyed by CFBundleVersion |
+| Persist deep link history + favorites | UserDefaults storage |
 
 ## What Noober Does NOT Do
 
@@ -248,6 +249,7 @@ Noober.shared.log("Event fired", category: .init("analytics"))
 | Log entries stored | 500 |
 | WebSocket frames per connection | 1000 |
 | Screen history entries | 200 |
+| Deep link history entries | 100 |
 
 Oldest entries are removed when limits are reached.
 
@@ -277,5 +279,35 @@ Sources/Noober/
   Logs/Models/LogEntry.swift           <- Public models (LogLevel, LogCategory, LogEntry)
   UserDefaults/UserDefaultsStore.swift <- UD browser
   Keychain/KeychainStore.swift         <- Keychain browser
+  DeepLink/DeepLinkStore.swift         <- Deep link tester + persistence
+  DeepLink/Models/DeepLinkEntry.swift  <- Deep link model (url, result, favorite)
   UI/                                  <- SwiftUI debug panel (all internal)
 ```
+
+## Deep Link Tester
+
+The deep link tester is available in the **Rules** tab under the **Links** section. It is NOT a public API — users interact with it through the debug panel UI. Deep link history and favorites persist across launches via UserDefaults.
+
+No code integration needed. It works automatically after `Noober.shared.start()`.
+
+## Analytics Logging (recommended pattern)
+
+Noober does NOT have a dedicated analytics API. Use the existing `log()` with a custom category:
+
+```swift
+// Define a reusable category
+public extension LogCategory {
+    static let analytics = LogCategory("Analytics")
+}
+
+// In your analytics wrapper:
+func track(_ event: String, props: [String: Any]?) {
+    #if DEBUG
+    let propsString = props.map { "\($0)" } ?? "nil"
+    Noober.shared.log("[\(event)] \(propsString)", category: .analytics)
+    #endif
+    // ... fire to real analytics SDK
+}
+```
+
+This shows analytics events in the Logs tab, filterable by the "Analytics" category chip.

@@ -33,6 +33,7 @@ That's it. A floating bubble appears on screen. Tap it to open the debug panel.
 - <doc:CustomLogging>
 - <doc:StorageInspector>
 - <doc:QAChecklist>
+- <doc:DeepLinkTester>
 
 ### Public Types
 
