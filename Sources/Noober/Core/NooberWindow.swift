@@ -22,6 +22,7 @@ enum RulesSection: Int, CaseIterable {
     case mocks = 1
     case intercept = 2
     case environment = 3
+    case deepLink = 4
 }
 
 @MainActor

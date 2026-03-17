@@ -47,10 +47,10 @@ struct StorageTabContent: View {
 // MARK: - Logs Tab
 
 struct LogsTabContent: View {
-    @StateObject private var store = LogStore.shared
+    @StateObject private var logStore = LogStore.shared
 
     var body: some View {
-        LogListView(store: store)
+        LogListView(store: logStore)
     }
 }
 
@@ -60,6 +60,7 @@ struct RulesTabContent: View {
     @StateObject private var rulesStore = RulesStore.shared
     @StateObject private var pendingStore = PendingInterceptStore.shared
     @StateObject private var envStore = EnvironmentStore.shared
+    @StateObject private var deepLinkStore = DeepLinkStore.shared
     @State private var selectedSection: RulesSection = .rewrite
     @State private var reviewingIntercept: PendingIntercept?
 
@@ -75,6 +76,7 @@ struct RulesTabContent: View {
                 Text("Mocks").tag(RulesSection.mocks)
                 Text("Intercept").tag(RulesSection.intercept)
                 Text("Env").tag(RulesSection.environment)
+                Text("Links").tag(RulesSection.deepLink)
             }
             .pickerStyle(.segmented)
             .padding(.horizontal, 16)
@@ -87,6 +89,7 @@ struct RulesTabContent: View {
                 case .mocks: MockRuleListView(store: rulesStore)
                 case .intercept: InterceptRuleListView(store: rulesStore)
                 case .environment: EnvironmentListView(store: envStore)
+                case .deepLink: DeepLinkTesterView(store: deepLinkStore)
                 }
             }
             .animation(.easeInOut(duration: 0.15), value: selectedSection)
