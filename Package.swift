@@ -3,11 +3,15 @@ import PackageDescription
 
 let package = Package(
     name: "Noober",
-    platforms: [.iOS(.v15)],
+    platforms: [.iOS(.v15), .macOS(.v13)],
     products: [
         .library(
             name: "Noober",
             targets: ["Noober"]
+        ),
+        .library(
+            name: "NooberShared",
+            targets: ["NooberShared"]
         )
     ],
     dependencies: [],
@@ -16,6 +20,11 @@ let package = Package(
             name: "Noober",
             dependencies: [],
             path: "Sources/Noober"
+        ),
+        .target(
+            name: "NooberShared",
+            dependencies: [],
+            path: "Sources/NooberShared"
         ),
         .testTarget(
             name: "NooberTests",

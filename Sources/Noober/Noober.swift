@@ -14,7 +14,10 @@ public final class Noober {
         NetworkInterceptor.install()
         WebSocketInterceptor.shared.install()
         NooberWindow.shared.showBubble()
+        CompanionServer.shared.startAdvertising()
     }
+
+    public var isCompanionConnected: Bool { CompanionServer.shared.isConnected }
 
     public func stop() {
         guard isStarted else { return }
@@ -23,6 +26,7 @@ public final class Noober {
         NetworkInterceptor.uninstall()
         WebSocketInterceptor.shared.uninstall()
         NooberWindow.shared.hideBubble()
+        CompanionServer.shared.stopAdvertising()
         NetworkActivityStore.shared.clearAll()
         LogStore.shared.clearAll()
         EnvironmentStore.shared.clearAll()
