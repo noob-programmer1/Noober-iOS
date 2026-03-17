@@ -81,5 +81,15 @@ public final class Noober {
         }
     }
 
+    /// Programmatically open the debug panel.
+    public func showDebugger() {
+        NooberWindow.shared.showDebugger()
+    }
+
+    /// Programmatically close the debug panel.
+    public func hideDebugger() {
+        NooberWindow.shared.hideDebugger()
+    }
+
     private init() {}
 }

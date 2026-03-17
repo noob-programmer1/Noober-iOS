@@ -10,6 +10,16 @@ A powerful, zero-dependency debugging toolkit for iOS apps.
 
 Noober gives your debug builds a floating inspector bubble that lets you monitor network traffic, inspect storage, view logs, define mock/rewrite/intercept rules, switch environments, and run QA checklists — all without leaving your app.
 
+**[Documentation](https://noob-programmer1.github.io/Noober-iOS/documentation/noober/)**
+
+<p align="center">
+  <img src="Screenshots/network.jpg" width="180" alt="Network Inspector" />
+  <img src="Screenshots/logs.jpg" width="180" alt="Custom Logs" />
+  <img src="Screenshots/storage.jpg" width="180" alt="Storage Inspector" />
+  <img src="Screenshots/rules.jpg" width="180" alt="Rules Engine" />
+  <img src="Screenshots/qa.jpg" width="180" alt="QA Checklist" />
+</p>
+
 ---
 
 ## Features
@@ -243,7 +253,30 @@ Full API documentation is available at:
 
 **[noob-programmer1.github.io/Noober-iOS](https://noob-programmer1.github.io/Noober-iOS/documentation/noober/)**
 
-Built with [Swift-DocC](https://www.swift.org/documentation/docc/) and deployed via GitHub Pages.
+### How the documentation is built and deployed
+
+The documentation is built using [Swift-DocC](https://www.swift.org/documentation/docc/) and hosted on GitHub Pages from the `gh-pages` branch.
+
+**DocC Catalog:** The source lives in `Sources/Noober/Noober.docc/` — a documentation catalog containing article pages (Getting Started, Network Inspector, Rules Engine, etc.) alongside the auto-generated API reference from `///` doc comments in the source code.
+
+**Build locally:**
+
+```bash
+# 1. Build the DocC archive
+xcodebuild docbuild \
+  -scheme Noober \
+  -destination 'generic/platform=iOS' \
+  -derivedDataPath .derivedData
+
+# 2. Transform for static hosting
+$(xcrun --find docc) process-archive \
+  transform-for-static-hosting \
+  .derivedData/Build/Products/Debug-iphoneos/Noober.doccarchive \
+  --hosting-base-path Noober-iOS \
+  --output-path docs
+```
+
+**Deploy:** The `docs/` output is pushed to the `gh-pages` branch. GitHub Pages serves it as a static site. A `.nojekyll` file in the branch root tells GitHub to skip Jekyll processing (required for DocC's SPA routing to work).
 
 ---
 
