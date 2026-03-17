@@ -1,83 +1,101 @@
-# Noober
+<p align="center">
+  <img src="https://img.shields.io/badge/Swift-6.0+-F05138?style=for-the-badge&logo=swift&logoColor=white" alt="Swift 6.0+" />
+  <img src="https://img.shields.io/badge/iOS-15%2B-007AFF?style=for-the-badge&logo=apple&logoColor=white" alt="iOS 15+" />
+  <img src="https://img.shields.io/badge/SPM-Compatible-2ECC71?style=for-the-badge&logo=swift&logoColor=white" alt="SPM Compatible" />
+  <img src="https://img.shields.io/badge/Dependencies-Zero-9B59B6?style=for-the-badge" alt="Zero Dependencies" />
+</p>
 
-A powerful, zero-dependency debugging toolkit for iOS apps.
-
-[![Swift 6.0+](https://img.shields.io/badge/Swift-6.0+-orange.svg)](https://swift.org)
-[![iOS 15+](https://img.shields.io/badge/iOS-15%2B-blue.svg)](https://developer.apple.com/ios/)
-[![SPM Compatible](https://img.shields.io/badge/SPM-compatible-brightgreen.svg)](https://swift.org/package-manager/)
-[![License](https://img.shields.io/badge/License-Apache%202.0-lightgrey.svg)](LICENSE)
-[![Documentation](https://img.shields.io/badge/Documentation-DocC-blue.svg)](https://noob-programmer1.github.io/Noober-iOS/documentation/noober/)
-
-Noober gives your debug builds a floating inspector bubble that lets you monitor network traffic, inspect storage, view logs, define mock/rewrite/intercept rules, switch environments, and run QA checklists — all without leaving your app.
-
-**[Documentation](https://noob-programmer1.github.io/Noober-iOS/documentation/noober/)**
+<h1 align="center">Noober</h1>
 
 <p align="center">
-  <img src="Screenshots/network.jpg" width="180" alt="Network Inspector" />
-  <img src="Screenshots/logs.jpg" width="180" alt="Custom Logs" />
-  <img src="Screenshots/storage.jpg" width="180" alt="Storage Inspector" />
-  <img src="Screenshots/rules.jpg" width="180" alt="Rules Engine" />
-  <img src="Screenshots/qa.jpg" width="180" alt="QA Checklist" />
+  <b>The debugging toolkit your iOS app deserves.</b><br/>
+  <sub>Network inspector. Storage browser. Log viewer. Rules engine. QA checklist. One floating bubble.</sub>
+</p>
+
+<p align="center">
+  <a href="https://noob-programmer1.github.io/Noober-iOS/documentation/noober/">Documentation</a> &bull;
+  <a href="#-quick-start">Quick Start</a> &bull;
+  <a href="#-installation">Install</a> &bull;
+  <a href="#-api-reference">API</a> &bull;
+  <a href="LICENSE">License</a>
 </p>
 
 ---
 
-## Features
+<p align="center">
+  <img src="Screenshots/network.jpg" width="170" alt="Network Inspector" />
+  &nbsp;
+  <img src="Screenshots/logs.jpg" width="170" alt="Custom Logs" />
+  &nbsp;
+  <img src="Screenshots/storage.jpg" width="170" alt="Storage Inspector" />
+  &nbsp;
+  <img src="Screenshots/rules.jpg" width="170" alt="Rules Engine" />
+  &nbsp;
+  <img src="Screenshots/qa.jpg" width="170" alt="QA Checklist" />
+</p>
+
+<p align="center">
+  <sub>Network &bull; Logs &bull; Storage &bull; Rules &bull; QA</sub>
+</p>
+
+---
+
+## Why Noober?
+
+Drop one line into your debug build and get a complete debugging suite — no Charles Proxy, no separate logging dashboard, no manual environment switching. Just shake or tap the bubble.
+
+```swift
+Noober.shared.start()  // That's it.
+```
+
+---
+
+## What's Inside
+
+<table>
+<tr>
+<td width="50%" valign="top">
 
 ### Network Inspector
-- **Automatic HTTP/HTTPS capture** — intercepts all `URLSession` traffic (default & ephemeral configs) via `URLProtocol` swizzling. Zero setup.
-- **WebSocket monitoring** — tracks WebSocket connections, sent/received frames, ping/pong, close codes, and payload previews.
-- **Rich detail view** — method, status code, URL, headers, request/response body (with JSON pretty-printing), timing, and content size.
-- **cURL export** — copy any captured request as a ready-to-paste cURL command.
-- **Request replay** — re-fire any captured request with one tap.
-- **Image preview** — inline image rendering for image responses.
-- **Screen tracking** — automatically tags each request with the view controller that triggered it. Group requests by screen.
-- **Search & filter** — filter by HTTP method, status code, host, content type, entry type (HTTP/WebSocket), or source screen.
+Captures every `URLSession` request automatically — HTTP, HTTPS, and WebSocket. See method, status, headers, body (pretty-printed JSON), timing, size, and the view controller that triggered it. Copy as cURL. Replay with one tap. Filter by method, status, host, or screen.
+
+</td>
+<td width="50%" valign="top">
 
 ### Rules Engine
-- **URL rewrite rules** — redirect requests to different hosts at runtime (e.g., production to staging). Supports match modes: Host, Contains, Prefix, Exact, and Regex.
-- **Mock rules** — return synthetic responses without hitting the network. Configure status code, headers, and response body per rule.
-- **Intercept rules** — pause matching requests mid-flight and present them for inspection. Edit the URL, method, headers, or body before proceeding, proceed with the original, or cancel. Auto-timeout after 60 seconds.
-- **Persistent** — all rules are saved to UserDefaults and survive app restarts.
+**Rewrite** URLs to redirect traffic between servers. **Mock** responses to test edge cases without a backend. **Intercept** requests mid-flight — inspect, edit, then proceed or cancel. Five match modes: Host, Contains, Prefix, Exact, Regex. All rules persist across launches.
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
 
 ### Environment Switching
-- **Register environments** — define named environments with base URLs and optional notes.
-- **One-tap switching** — switch the active environment from the debug panel. All matching network requests are rewritten automatically.
-- **Multi-URL support** — map multiple base URLs positionally between environments (e.g., API server + CDN + WebSocket host).
-- **Persistent selection** — the active environment is remembered across launches.
+Register your environments once, switch with one tap. Noober rewrites matching requests automatically. Supports multiple base URLs per environment (API + CDN + WebSocket). Active selection persists across launches.
+
+</td>
+<td width="50%" valign="top">
 
 ### QA Checklist
-- **Register test items** — define checklist items with title, notes, priority (high/normal/low), and associated API endpoints.
-- **Track pass/fail** — mark items as passed, failed (with notes and attached request IDs), or reset to pending.
-- **Build-aware** — checklist state is keyed by build number. A new build auto-resets the checklist while preserving item definitions.
-- **Progress overview** — see counts of passed, failed, and pending items at a glance.
-- **Fail reports** — attach network requests to failed items for context.
+Define test items with priority and associated endpoints. Mark pass/fail, attach network requests to failures, track progress. Build-aware — auto-resets when a new build is detected. Share reports.
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
 
 ### Storage Inspector
-- **UserDefaults browser** — view, edit, delete, and duplicate UserDefaults entries. Type-aware editing (String, Int, Double, Bool, Date, Array, Dictionary). Export as JSON. Toggle system keys visibility.
-- **Keychain browser** — list generic and internet password items. Lazy-load values on demand. Add, edit, and delete entries.
-- **App info** — bundle version, build number, and storage details.
+Browse and edit **UserDefaults** with type-aware parsing. View **Keychain** items with lazy-loaded values. Export UserDefaults as JSON. See app info at a glance.
+
+</td>
+<td width="50%" valign="top">
 
 ### Custom Logging
-- **Structured logs** — log with message, level (`debug`, `info`, `warning`, `error`), and custom category.
-- **Source location** — each log records the file and line number automatically.
-- **Filter by level & category** — narrow down logs in the UI.
-- **Thread-safe** — `log()` is `nonisolated` and safe to call from any thread.
+Structured logs with four levels (`debug` / `info` / `warning` / `error`) and custom categories. Source file and line captured automatically. Thread-safe — call from anywhere.
 
-### Floating Bubble UI
-- **Draggable bubble** — a floating overlay bubble that snaps to screen edges. Tap to open the full debug panel.
-- **Live activity indicator** — shows active request count with a rotating spinner. Pulse animations on success (green) and failure (red).
-- **5-tab debug panel** — Network, Storage, Logs, Rules, QA.
-- **Global search** — search across all tabs.
-- **Haptic feedback** — tactile responses for interactions.
-- **Non-intrusive** — the bubble passes through touches outside its bounds so your app works normally.
-
-### Developer Experience
-- **Zero dependencies** — pure Swift, no third-party libraries.
-- **One-line setup** — `Noober.shared.start()` is all you need.
-- **Swift 6 concurrency** — `@MainActor` stores, `nonisolated` logging, `Sendable` models.
-- **Thread-safe** — `os_unfair_lock` for screen tracking, `NSLock` for rule snapshots, actor isolation for stores.
-- **Auto-cleanup** — max 500 HTTP requests, 500 logs, 1000 WebSocket frames per connection, 200 screen history entries.
+</td>
+</tr>
+</table>
 
 ---
 
@@ -85,30 +103,21 @@ Noober gives your debug builds a floating inspector bubble that lets you monitor
 
 ### Swift Package Manager
 
-**Xcode:**
+**Xcode** &rarr; File &rarr; Add Package Dependencies:
 
-1. Go to **File > Add Package Dependencies**
-2. Enter the repository URL:
-   ```
-   https://github.com/noob-programmer1/Noober-iOS.git
-   ```
-3. Select **Up to Next Major** from `2.0.0`
+```
+https://github.com/noob-programmer1/Noober-iOS.git
+```
 
 **Package.swift:**
 
 ```swift
 dependencies: [
     .package(url: "https://github.com/noob-programmer1/Noober-iOS.git", from: "2.0.0")
+],
+targets: [
+    .target(name: "YourApp", dependencies: ["Noober"])
 ]
-```
-
-Then add `"Noober"` to your target's dependencies:
-
-```swift
-.target(
-    name: "YourApp",
-    dependencies: ["Noober"]
-)
 ```
 
 ---
@@ -116,9 +125,9 @@ Then add `"Noober"` to your target's dependencies:
 ## Quick Start
 
 > [!WARNING]
-> Noober is a debugging tool. Always wrap usage with `#if DEBUG` to exclude it from release builds.
+> Noober is for debugging only. Always wrap with `#if DEBUG`.
 
-### Basic Setup
+### Minimal
 
 ```swift
 #if DEBUG
@@ -132,16 +141,13 @@ struct MyApp: App {
         Noober.shared.start()
         #endif
     }
-
     var body: some Scene {
         WindowGroup { ContentView() }
     }
 }
 ```
 
-That's it. Tap the floating bubble to open the debug panel.
-
-### Full Setup
+### Full Power
 
 ```swift
 #if DEBUG
@@ -152,123 +158,169 @@ import Noober
 struct MyApp: App {
     init() {
         #if DEBUG
-        // Register environments for quick switching
+        // Switch between servers with one tap
         Noober.shared.registerEnvironments([
             .init(name: "Production", baseURL: "https://api.example.com"),
-            .init(name: "Staging",
-                  baseURL: "https://api.staging.example.com",
+            .init(name: "Staging", baseURL: "https://api.staging.example.com",
                   notes: "Uses test payment keys"),
-            .init(name: "Local",
-                  baseURL: "http://localhost:8080",
-                  notes: "Run the dev server first"),
+            .init(name: "Local", baseURL: "http://localhost:8080"),
         ])
 
-        // Register a QA checklist for the current build
+        // QA checklist for the current build
         Noober.shared.registerChecklist([
-            .init("Login flow",
-                  notes: "Test with email + social login",
-                  priority: .high,
-                  endpoints: ["/auth/login", "/auth/social"]),
-            .init("Checkout",
-                  notes: "Test with & without saved cards",
-                  priority: .high,
-                  endpoints: ["/api/payments"]),
-            .init("Pull-to-refresh on feed",
-                  priority: .normal),
+            .init("Login flow", notes: "Test email + social",
+                  priority: .high, endpoints: ["/auth/login"]),
+            .init("Checkout", notes: "With & without saved cards",
+                  priority: .high, endpoints: ["/api/payments"]),
+            .init("Pull-to-refresh on feed", priority: .normal),
         ])
 
         Noober.shared.start()
         #endif
     }
-
     var body: some Scene {
         WindowGroup { ContentView() }
     }
 }
 ```
 
-### Custom Logging
+### Logging
 
 ```swift
-#if DEBUG
-// Basic log
 Noober.shared.log("User signed in")
-
-// With level and category
-Noober.shared.log("Payment initiated", level: .info, category: .init("payments"))
-Noober.shared.log("Token refresh failed", level: .error, category: .init("auth"))
-Noober.shared.log("Cache miss for key: user_profile", level: .debug, category: .init("cache"))
-#endif
-```
-
-### Stopping Noober
-
-```swift
-#if DEBUG
-Noober.shared.stop()  // Removes bubble, clears all data, uninstalls interceptors
-#endif
+Noober.shared.log("Payment failed", level: .error, category: .init("payments"))
+Noober.shared.log("Cache miss", level: .debug, category: .init("cache"))
 ```
 
 ---
 
 ## API Reference
 
-### Core
+<details>
+<summary><b>Noober</b> — Main singleton</summary>
 
-| Method | Description |
-|--------|-------------|
-| `Noober.shared.start()` | Install interceptors, show floating bubble, begin capturing |
-| `Noober.shared.stop()` | Uninstall interceptors, hide bubble, clear all captured data |
-| `Noober.shared.isStarted` | Whether Noober is currently running |
+```swift
+@MainActor
+public final class Noober {
+    public static let shared: Noober
 
-### Logging
+    public var isStarted: Bool { get }
 
-| Method | Description |
-|--------|-------------|
-| `Noober.shared.log(_:level:category:file:line:)` | Add a log entry. Thread-safe (`nonisolated`). |
+    public func start()
+    public func stop()
+    public func showDebugger()
+    public func hideDebugger()
 
-**Log Levels:** `debug`, `info`, `warning`, `error`
+    public func registerEnvironments(_ environments: [NooberEnvironment])
+    public func registerChecklist(_ items: [QAChecklistItem])
 
-**Log Categories:** Create custom categories with `LogCategory("analytics")`. Built-in: `.general`.
+    // Thread-safe — call from any thread
+    nonisolated public func log(
+        _ message: String,
+        level: LogLevel = .info,
+        category: LogCategory = .general,
+        file: String = #file,
+        line: UInt = #line
+    )
+}
+```
 
-### Environments
+</details>
 
-| Method | Description |
-|--------|-------------|
-| `Noober.shared.registerEnvironments(_:)` | Register available environments. First is the default (no rewriting). |
+<details>
+<summary><b>NooberEnvironment</b> — Server environment definition</summary>
 
-### QA Checklist
+```swift
+public struct NooberEnvironment: Identifiable, Codable, Sendable, Hashable {
+    public let id: UUID
+    public let name: String
+    public let baseURLs: [String]
+    public let notes: String
 
-| Method | Description |
-|--------|-------------|
-| `Noober.shared.registerChecklist(_:)` | Register QA checklist items for the current build. |
+    // Single base URL
+    public init(name: String, baseURL: String, notes: String = "")
 
-**Priority Levels:** `.high`, `.normal`, `.low`
+    // Multiple base URLs (positional mapping)
+    public init(name: String, baseURLs: [String], notes: String = "")
+}
+```
+
+</details>
+
+<details>
+<summary><b>QAChecklistItem</b> — Test item definition</summary>
+
+```swift
+public struct QAChecklistItem: Sendable {
+    public let title: String
+    public let notes: String
+    public let priority: QAChecklistPriority  // .high, .normal, .low
+    public let endpoints: [String]
+
+    public init(
+        _ title: String,
+        notes: String = "",
+        priority: QAChecklistPriority = .normal,
+        endpoints: [String] = []
+    )
+}
+```
+
+</details>
+
+<details>
+<summary><b>LogLevel</b> &amp; <b>LogCategory</b></summary>
+
+```swift
+public enum LogLevel: String, CaseIterable, Sendable, Comparable {
+    case debug   = "DEBUG"
+    case info    = "INFO"
+    case warning = "WARN"
+    case error   = "ERROR"
+}
+
+public struct LogCategory: RawRepresentable, Hashable, Sendable {
+    public init(_ rawValue: String)
+    public static let general: LogCategory
+}
+```
+
+</details>
+
+---
+
+## How It Works
+
+| Layer | What it does |
+|-------|-------------|
+| **URLProtocol swizzling** | Injects `NetworkInterceptor` into `URLSessionConfiguration.default` and `.ephemeral`. Captures all HTTP/HTTPS traffic automatically. |
+| **WebSocket swizzling** | Hooks into `URLSessionWebSocketTask` to capture sent/received frames, connection status, and close codes. |
+| **Screen tracking** | Swizzles `UIViewController.viewDidAppear(_:)` to tag each request with the source screen. |
+| **Rules engine** | Evaluates mock → intercept → environment → rewrite rules in order. Mock/intercept short-circuit. Rules persist in UserDefaults. |
+| **Overlay windows** | Bubble lives in a `UIWindow` at `.alert + 1`. Debugger at `.alert + 2`. Custom hit testing passes through non-bubble touches. |
+| **Thread safety** | `@MainActor` for all stores. `nonisolated` for logging. `os_unfair_lock` for screen tracker. `NSLock` for rule snapshots read by the interceptor. |
 
 ---
 
 ## Documentation
 
-Full API documentation is available at:
+Full API docs with guides:
 
 **[noob-programmer1.github.io/Noober-iOS](https://noob-programmer1.github.io/Noober-iOS/documentation/noober/)**
 
-### How the documentation is built and deployed
+Built with [Swift-DocC](https://www.swift.org/documentation/docc/). Source in `Sources/Noober/Noober.docc/`.
 
-The documentation is built using [Swift-DocC](https://www.swift.org/documentation/docc/) and hosted on GitHub Pages from the `gh-pages` branch.
-
-**DocC Catalog:** The source lives in `Sources/Noober/Noober.docc/` — a documentation catalog containing article pages (Getting Started, Network Inspector, Rules Engine, etc.) alongside the auto-generated API reference from `///` doc comments in the source code.
-
-**Build locally:**
+<details>
+<summary><b>Build docs locally</b></summary>
 
 ```bash
-# 1. Build the DocC archive
+# Build the DocC archive
 xcodebuild docbuild \
   -scheme Noober \
   -destination 'generic/platform=iOS' \
   -derivedDataPath .derivedData
 
-# 2. Transform for static hosting
+# Transform for static hosting
 $(xcrun --find docc) process-archive \
   transform-for-static-hosting \
   .derivedData/Build/Products/Debug-iphoneos/Noober.doccarchive \
@@ -276,94 +328,24 @@ $(xcrun --find docc) process-archive \
   --output-path docs
 ```
 
-**Deploy:** The `docs/` output is pushed to the `gh-pages` branch. GitHub Pages serves it as a static site. A `.nojekyll` file in the branch root tells GitHub to skip Jekyll processing (required for DocC's SPA routing to work).
+Deploy by pushing `docs/` to the `gh-pages` branch. The `.nojekyll` file in the branch root prevents Jekyll from interfering with DocC's SPA routing.
 
----
-
-## Architecture
-
-```
-Sources/Noober/
-├── Noober.swift                    # Public API singleton
-├── Core/
-│   ├── FloatingBubbleView.swift    # Draggable overlay bubble with pulse animations
-│   └── NooberWindow.swift          # Overlay window management (bubble + debugger)
-├── Network/
-│   ├── NetworkInterceptor.swift    # URLProtocol-based HTTP/HTTPS interception
-│   ├── NetworkInterceptor+Swizzle.swift  # URLSessionConfiguration swizzling
-│   ├── NetworkActivityStore.swift  # Request/WebSocket storage (max 500/1000)
-│   ├── RequestReplayer.swift       # Re-fire captured requests
-│   ├── ScreenTracker.swift         # UIViewController tracking via swizzle
-│   └── Models/
-│       └── NetworkRequestModel.swift
-├── WebSocket/
-│   ├── WebSocketInterceptor.swift  # WebSocket frame capture via swizzle
-│   └── Models/
-│       └── WebSocketModels.swift
-├── Rules/
-│   ├── RulesStore.swift            # Persistent rule CRUD
-│   ├── InterceptManager.swift      # Pending intercept lifecycle
-│   └── Models/
-│       ├── URLMatchPattern.swift   # Host/Contains/Prefix/Exact/Regex matching
-│       ├── URLRewriteRule.swift    # URL rewrite definitions
-│       ├── MockRule.swift          # Mock response definitions
-│       ├── InterceptRule.swift     # Request intercept definitions
-│       └── PendingIntercept.swift  # In-flight intercepted request state
-├── Environment/
-│   ├── EnvironmentStore.swift      # Persistent environment switching
-│   └── NooberEnvironment.swift     # Environment model
-├── QAChecklist/
-│   ├── QAChecklistStore.swift      # Build-keyed checklist persistence
-│   └── Models/
-│       └── QAChecklistItem.swift
-├── Logs/
-│   ├── LogStore.swift              # Log entry storage (max 500)
-│   └── Models/
-│       └── LogEntry.swift          # Level, category, message, file, line
-├── UserDefaults/
-│   ├── UserDefaultsStore.swift     # UserDefaults CRUD + export
-│   └── Models/
-│       └── UserDefaultsEntry.swift
-├── Keychain/
-│   ├── KeychainStore.swift         # Keychain item CRUD
-│   └── Models/
-│       └── KeychainEntry.swift
-└── UI/                             # SwiftUI debug panel (5 tabs)
-    ├── NooberMainView.swift
-    ├── Network/
-    ├── Storage/
-    ├── Logs/
-    ├── Rules/
-    ├── QAChecklist/
-    ├── Keychain/
-    ├── UserDefaults/
-    └── Shared/                     # Theme, badges, search bar, JSON flattener
-```
+</details>
 
 ---
 
 ## Requirements
 
-- iOS 15.0+
-- Swift 6.0+
-- Xcode 16+
+| | Minimum |
+|---|---------|
+| iOS | 15.0+ |
+| Swift | 6.0+ |
+| Xcode | 16+ |
+| Dependencies | None |
 
 ---
 
-## License
-
-```
-Copyright 2023 Abhishek Agarwal
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-```
+<p align="center">
+  <sub>Apache 2.0 &mdash; <a href="LICENSE">License</a></sub><br/>
+  <sub>Built by <a href="https://github.com/noob-programmer1">Abhishek Agarwal</a></sub>
+</p>
