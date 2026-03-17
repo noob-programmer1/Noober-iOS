@@ -50,6 +50,10 @@ Noober.shared.start()  // That's it.
 
 ---
 
+> **Using AI to code?** Point your AI assistant (Claude, Cursor, Copilot, etc.) to [`AI_INTEGRATION.md`](AI_INTEGRATION.md) — a machine-readable reference with exact API signatures, copy-paste integration patterns, and constraints. It's designed so any AI can integrate Noober into your project in seconds.
+
+---
+
 ## What's Inside
 
 <table>
