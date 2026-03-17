@@ -1,0 +1,54 @@
+name: Deploy Documentation
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build DocC
+        run: |
+          swift package resolve
+          xcodebuild docbuild \
+            -scheme Noober \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath .derivedData
+
+      - name: Process DocC archive
+        run: |
+          $(xcrun --find docc) process-archive \
+            transform-for-static-hosting \
+            .derivedData/Build/Products/Debug-iphoneos/Noober.doccarchive \
+            --hosting-base-path Noober-iOS \
+            --output-path docs
+          echo '<script>window.location.href += "/documentation/noober"</script>' > docs/index.html
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
