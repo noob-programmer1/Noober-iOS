@@ -153,8 +153,26 @@ struct FloatingBubbleView: View {
                     .offset(x: size / 2.5, y: -size / 2.5)
                     .transition(.scale.combined(with: .opacity))
             }
+
+            // Recording indicator — red pulsing dot
+            if FlowRecorder.shared.isRecording {
+                ZStack {
+                    Circle()
+                        .fill(Color.red.opacity(0.3))
+                        .frame(width: 18, height: 18)
+                    Circle()
+                        .fill(Color.red)
+                        .frame(width: 10, height: 10)
+                        .overlay(Circle().stroke(.white, lineWidth: 1.5))
+                }
+                .offset(x: -size / 2.5, y: -size / 2.5)
+                .transition(.scale.combined(with: .opacity))
+            }
         }
     }
+
+    /// When recording and bubble is tapped, stop recording instead of opening debugger
+    var isRecording: Bool { FlowRecorder.shared.isRecording }
 
     // MARK: - Frame reporting
 

@@ -7,10 +7,15 @@ public final class Noober {
 
     public private(set) var isStarted = false
 
-    public func start() {
+    /// Start Noober.
+    /// - Parameter autoTrackScreens: `true` (default) uses swizzling to auto-detect screen names.
+    ///   Set to `false` if your app uses a custom navigation system and you'll call `trackScreen(_:)` manually.
+    public func start(autoTrackScreens: Bool = true) {
         guard !isStarted else { return }
         isStarted = true
-        ScreenTracker.install()
+        if autoTrackScreens {
+            ScreenTracker.install()
+        }
         NetworkInterceptor.install()
         WebSocketInterceptor.shared.install()
         NooberWindow.shared.showBubble()
@@ -82,6 +87,31 @@ public final class Noober {
         Task { @MainActor in
             guard Self.shared.isStarted else { return }
             LogStore.shared.addEntry(entry)
+        }
+    }
+
+    // MARK: - Screen Tracking
+
+    /// Manually report the current screen name. Use this when your app has a custom
+    /// navigation system (e.g., Coordinator, custom Router) where auto-detection via
+    /// swizzling doesn't produce useful names.
+    ///
+    /// Call this from your navigation controller/router whenever a new screen appears:
+    ///
+    ///     // In your Navigator/Router:
+    ///     func push(_ destination: Destination) {
+    ///         // ... push logic ...
+    ///         #if DEBUG
+    ///         Noober.shared.trackScreen(destination.screenName)
+    ///         #endif
+    ///     }
+    ///
+    /// Works alongside auto-detection — manual calls take priority.
+    /// Safe to call from any thread.
+    nonisolated public func trackScreen(_ name: String) {
+        Task { @MainActor in
+            guard Self.shared.isStarted else { return }
+            ScreenTracker.shared.manualTrack(name)
         }
     }
 

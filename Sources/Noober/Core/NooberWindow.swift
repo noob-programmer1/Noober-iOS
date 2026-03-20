@@ -9,6 +9,7 @@ enum NooberTab: Int, CaseIterable {
     case logs = 2
     case rules = 3
     case qa = 4
+    case aiFlows = 5
 }
 
 enum StorageSection: Int, CaseIterable {
@@ -35,6 +36,11 @@ final class NooberWindow {
 
     private(set) var isDebuggerShowing = false
 
+    /// Returns true if the given window belongs to Noober (bubble or debugger).
+    func isNooberWindow(_ window: UIWindow) -> Bool {
+        window === overlayWindow || window === debuggerWindow
+    }
+
     /// The bubble reports its screen-space frame here so the window can do hit testing.
     var bubbleFrame: CGRect = .zero
 
@@ -47,7 +53,13 @@ final class NooberWindow {
         window.backgroundColor = .clear
 
         let bubbleView = FloatingBubbleView { [weak self] in
-            self?.showDebugger()
+            if FlowRecorder.shared.isRecording {
+                // Tap during recording → stop recording and show AI Flows tab
+                FlowRecorder.shared.stopRecording()
+                self?.showDebugger(tab: .aiFlows)
+            } else {
+                self?.showDebugger()
+            }
         }
         let host = UIHostingController(rootView: bubbleView)
         host.view.backgroundColor = .clear
@@ -63,8 +75,14 @@ final class NooberWindow {
         hideDebugger()
     }
 
-    func showDebugger() {
-        guard debuggerWindow == nil else { return }
+    func showDebugger(tab: NooberTab? = nil) {
+        guard debuggerWindow == nil else {
+            // Already showing — just switch tab if requested
+            if let tab, let tabBar = debuggerWindow?.rootViewController as? UITabBarController {
+                tabBar.selectedIndex = tab.rawValue
+            }
+            return
+        }
         guard let scene = overlayWindow?.windowScene else { return }
 
         isDebuggerShowing = true
@@ -82,8 +100,10 @@ final class NooberWindow {
             makeTab(LogsTabContent(), title: "Logs", icon: "list.bullet.rectangle", dismiss: dismiss),
             makeTab(RulesTabContent(), title: "Rules", icon: "shuffle", dismiss: dismiss),
             makeTab(QATabContent(), title: "QA", icon: "checklist", dismiss: dismiss),
+            makeTab(AIFlowsView(), title: "AI Flows", icon: "brain.head.profile", dismiss: dismiss),
         ]
 
+        if let tab { tabBarController.selectedIndex = tab.rawValue }
         window.rootViewController = tabBarController
         window.makeKeyAndVisible()
 

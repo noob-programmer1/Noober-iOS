@@ -28,6 +28,12 @@ enum CompanionMessageType: String, Codable, Sendable {
     case commandMarkQAPassed = "command.markQAPassed"
     case commandMarkQAFailed = "command.markQAFailed"
     case commandResetQAItem = "command.resetQAItem"
+    case commandRequestSnapshot = "command.requestSnapshot"
+    case commandRequestScreenshot = "command.requestScreenshot"
+    case responseScreenshot = "response.screenshot"
+
+    // Responses (iOS -> macOS, in response to commands)
+    case responseSnapshot = "response.snapshot"
 
     // Heartbeat
     case heartbeat = "heartbeat"

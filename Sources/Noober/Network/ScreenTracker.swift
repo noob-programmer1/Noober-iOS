@@ -2,27 +2,37 @@ import UIKit
 import os
 
 /// Tracks the currently visible view controller by swizzling `viewDidAppear(_:)`.
-/// Thread-safe: writes happen on the main thread, reads can happen from any thread.
+/// Thread-safe via `OSAllocatedUnfairLock`.
 final class ScreenTracker: @unchecked Sendable {
 
     static let shared = ScreenTracker()
 
     // MARK: - Thread-safe storage
 
-    private var _lock = os_unfair_lock()
+    private let lock = NSLock()
     private var _currentScreen: String = "Unknown"
     private var _screenHistory: [(name: String, timestamp: Date)] = []
 
     var currentScreen: String {
-        os_unfair_lock_lock(&_lock)
-        defer { os_unfair_lock_unlock(&_lock) }
-        return _currentScreen
+        lock.withLock { _currentScreen }
     }
 
     var screenHistory: [(name: String, timestamp: Date)] {
-        os_unfair_lock_lock(&_lock)
-        defer { os_unfair_lock_unlock(&_lock) }
-        return _screenHistory
+        lock.withLock { _screenHistory }
+    }
+
+    /// Manual screen tracking — called by `Noober.shared.trackScreen(_:)`.
+    /// Use when your app has a custom navigation system.
+    func manualTrack(_ name: String) {
+        lock.withLock {
+            _currentScreen = name
+            if _screenHistory.last?.name != name {
+                _screenHistory.append((name: name, timestamp: Date()))
+                if _screenHistory.count > 200 {
+                    _screenHistory.removeFirst(_screenHistory.count - 200)
+                }
+            }
+        }
     }
 
     // MARK: - Swizzle state
@@ -42,11 +52,8 @@ final class ScreenTracker: @unchecked Sendable {
         originalIMP = method_getImplementation(originalMethod)
 
         let swizzledBlock: @convention(block) (UIViewController, Bool) -> Void = { vc, animated in
-            // Call original implementation
             let original = unsafeBitCast(originalIMP!, to: (@convention(c) (UIViewController, Selector, Bool) -> Void).self)
             original(vc, originalSelector, animated)
-
-            // Track the screen
             shared.handleViewDidAppear(vc)
         }
 
@@ -68,19 +75,17 @@ final class ScreenTracker: @unchecked Sendable {
 
     private func handleViewDidAppear(_ vc: UIViewController) {
         guard Self.shouldTrack(vc) else { return }
-
         let name = Self.humanReadableName(for: vc)
-        os_unfair_lock_lock(&_lock)
-        _currentScreen = name
-        // Avoid consecutive duplicates in history
-        if _screenHistory.last?.name != name {
-            _screenHistory.append((name: name, timestamp: Date()))
-            // Keep history bounded
-            if _screenHistory.count > 200 {
-                _screenHistory.removeFirst(_screenHistory.count - 200)
+
+        lock.withLock {
+            _currentScreen = name
+            if _screenHistory.last?.name != name {
+                _screenHistory.append((name: name, timestamp: Date()))
+                if _screenHistory.count > 200 {
+                    _screenHistory.removeFirst(_screenHistory.count - 200)
+                }
             }
         }
-        os_unfair_lock_unlock(&_lock)
     }
 
     private static let ignoredVCTypes: Set<String> = [
@@ -96,27 +101,31 @@ final class ScreenTracker: @unchecked Sendable {
     private static func shouldTrack(_ vc: UIViewController) -> Bool {
         let className = String(describing: type(of: vc))
 
-        // Filter system containers
         if ignoredVCTypes.contains(className) { return false }
 
-        // Filter UIHostingController generics (e.g. "UIHostingController<SomeView>")
-        if className.hasPrefix("UIHostingController") { return false }
+        // UIHostingController: track only if vc.title is set (via .navigationTitle)
+        // Apps with custom nav should use Noober.shared.trackScreen(_:) instead
+        if className.hasPrefix("UIHostingController") {
+            if let title = vc.title, !title.isEmpty, title.count < 60 { return true }
+            return false
+        }
 
-        // Filter private system VCs (prefixed with _)
         if className.hasPrefix("_") { return false }
 
-        // Filter Noober's own VCs
         let bundle = Bundle(for: type(of: vc))
         if bundle == Bundle(for: ScreenTracker.self) { return false }
 
         return true
     }
 
-    /// Converts `HomeViewController` → `Home`, `UserProfileController` → `User Profile`.
     static func humanReadableName(for vc: UIViewController) -> String {
-        var name = String(describing: type(of: vc))
+        let className = String(describing: type(of: vc))
 
-        // Strip common suffixes
+        if className.hasPrefix("UIHostingController") {
+            return vc.title ?? "Unknown Screen"
+        }
+
+        var name = className
         for suffix in ["ViewController", "Controller", "Screen", "View"] {
             if name.hasSuffix(suffix) && name.count > suffix.count {
                 name = String(name.dropLast(suffix.count))
@@ -124,19 +133,16 @@ final class ScreenTracker: @unchecked Sendable {
             }
         }
 
-        // Insert spaces before capitals: "UserProfile" → "User Profile"
         var result = ""
         for (i, char) in name.enumerated() {
             if i > 0 && char.isUppercase {
                 let prev = name[name.index(name.startIndex, offsetBy: i - 1)]
-                if prev.isLowercase {
-                    result.append(" ")
-                }
+                if prev.isLowercase { result.append(" ") }
             }
             result.append(char)
         }
 
-        return result.isEmpty ? String(describing: type(of: vc)) : result
+        return result.isEmpty ? className : result
     }
 
     private init() {}

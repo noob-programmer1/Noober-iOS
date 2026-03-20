@@ -22,6 +22,10 @@ enum CommandHandler {
             handleMarkQAFailed(message)
         case .commandResetQAItem:
             handleResetQAItem(message)
+        case .commandRequestSnapshot:
+            handleSnapshot()
+        case .commandRequestScreenshot:
+            handleScreenshot()
         default:
             break
         }
@@ -128,5 +132,66 @@ enum CommandHandler {
     private static func handleResetQAItem(_ message: CompanionMessage) {
         guard let command = try? message.decode(MarkQACommand.self) else { return }
         QAChecklistStore.shared.resetItem(id: command.itemId)
+    }
+
+    // MARK: - In-Process Screenshot
+
+    private static func handleScreenshot() {
+        struct ScreenshotResponse: Codable {
+            let screen: String
+            let base64PNG: String
+        }
+
+        guard let base64 = InProcessScreenshot.capture() else { return }
+        let response = ScreenshotResponse(
+            screen: ScreenTracker.shared.currentScreen,
+            base64PNG: base64
+        )
+        if let message = try? CompanionMessage(type: .responseScreenshot, payload: response) {
+            CompanionServer.shared.send(message)
+        }
+    }
+
+    // MARK: - View Hierarchy Snapshot (fast, in-process)
+
+    private static func handleSnapshot() {
+        let elements = ViewHierarchySnapshot.capture()
+        let screen = ScreenTracker.shared.currentScreen
+
+        struct SnapshotElement: Codable {
+            let label: String?
+            let identifier: String?
+            let type: String
+            let x: Int
+            let y: Int
+            let width: Int
+            let height: Int
+            let interactive: Bool
+        }
+
+        struct SnapshotResponse: Codable {
+            let screen: String
+            let elements: [SnapshotElement]
+        }
+
+        let response = SnapshotResponse(
+            screen: screen,
+            elements: elements.map {
+                SnapshotElement(
+                    label: $0.label,
+                    identifier: $0.identifier,
+                    type: $0.type,
+                    x: Int($0.frame.origin.x),
+                    y: Int($0.frame.origin.y),
+                    width: Int($0.frame.width),
+                    height: Int($0.frame.height),
+                    interactive: $0.isInteractive
+                )
+            }
+        )
+
+        if let message = try? CompanionMessage(type: .responseSnapshot, payload: response) {
+            CompanionServer.shared.send(message)
+        }
     }
 }

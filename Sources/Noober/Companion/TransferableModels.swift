@@ -180,6 +180,7 @@ struct FullSyncPayload: Codable, Sendable {
     let deviceName: String
     let appName: String
     let appVersion: String
+    let recordedFlows: [NooberFlow]?
 }
 
 // MARK: - Command Payloads
