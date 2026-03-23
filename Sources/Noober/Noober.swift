@@ -18,6 +18,7 @@ public final class Noober {
         }
         NetworkInterceptor.install()
         WebSocketInterceptor.shared.install()
+        WebViewInterceptor.install()
         NooberWindow.shared.showBubble()
         CompanionServer.shared.startAdvertising()
     }
@@ -113,6 +114,28 @@ public final class Noober {
             guard Self.shared.isStarted else { return }
             ScreenTracker.shared.manualTrack(name)
         }
+    }
+
+    // MARK: - Network Configuration
+
+    /// Inject Noober's network interceptor into a URLSessionConfiguration.
+    ///
+    /// Use this when creating a custom `URLSession` (e.g., Alamofire `Session`)
+    /// that might initialize before `Noober.shared.start()` runs, or when
+    /// automatic swizzling doesn't cover your session setup.
+    ///
+    ///     let config = URLSessionConfiguration.default
+    ///     #if DEBUG
+    ///     Noober.shared.inject(into: config)
+    ///     #endif
+    ///     let session = Session(configuration: config)
+    ///
+    nonisolated public func inject(into configuration: URLSessionConfiguration) {
+        var protocols = configuration.protocolClasses ?? []
+        if !protocols.contains(where: { $0 == NetworkInterceptor.self }) {
+            protocols.insert(NetworkInterceptor.self, at: 0)
+        }
+        configuration.protocolClasses = protocols
     }
 
     /// Programmatically open the debug panel.
