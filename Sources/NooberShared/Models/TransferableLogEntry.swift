@@ -8,6 +8,7 @@ public struct TransferableLogEntry: Identifiable, Codable, Sendable {
     public let message: String
     public let file: String
     public let line: UInt
+    public let screenName: String?
 
     public init(
         id: UUID,
@@ -16,7 +17,8 @@ public struct TransferableLogEntry: Identifiable, Codable, Sendable {
         category: String,
         message: String,
         file: String,
-        line: UInt
+        line: UInt,
+        screenName: String? = nil
     ) {
         self.id = id
         self.timestamp = timestamp
@@ -25,5 +27,6 @@ public struct TransferableLogEntry: Identifiable, Codable, Sendable {
         self.message = message
         self.file = file
         self.line = line
+        self.screenName = screenName
     }
 }

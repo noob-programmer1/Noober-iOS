@@ -15,7 +15,7 @@ public enum CompanionMessageType: String, Codable, Sendable {
     case eventClear = "event.clear"
     case heartbeat = "heartbeat"
 
-    // macOS -> iOS
+    // macOS -> iOS (commands)
     case commandSwitchEnvironment = "command.switchEnvironment"
     case commandClearStore = "command.clearStore"
     case commandToggleRule = "command.toggleRule"
@@ -25,4 +25,20 @@ public enum CompanionMessageType: String, Codable, Sendable {
     case commandMarkQAFailed = "command.markQAFailed"
     case commandResetQAItem = "command.resetQAItem"
     case commandFetchBody = "command.fetchBody"
+    case commandAddMockRule = "command.addMockRule"
+    case commandRemoveMockRule = "command.removeMockRule"
+    case commandAddInterceptRule = "command.addInterceptRule"
+    case commandRemoveInterceptRule = "command.removeInterceptRule"
+    case commandFindElement = "command.findElement"
+    case commandScreenText = "command.screenText"
+    case commandRequestSnapshot = "command.requestSnapshot"
+    case commandRequestScreenshot = "command.requestScreenshot"
+    case commandScreenHTML = "command.screenHTML"
+
+    // iOS -> macOS (responses)
+    case responseFindElement = "response.findElement"
+    case responseScreenText = "response.screenText"
+    case responseSnapshot = "response.snapshot"
+    case responseScreenshot = "response.screenshot"
+    case responseScreenHTML = "response.screenHTML"
 }

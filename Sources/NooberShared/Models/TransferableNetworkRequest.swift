@@ -20,6 +20,7 @@ public struct TransferableNetworkRequest: Identifiable, Codable, Sendable {
     public let isEnvironmentRewritten: Bool
     public let originalURL: String?
     public let screenName: String?
+    public let source: String?
 
     // MARK: - Computed Helpers
 
@@ -44,6 +45,8 @@ public struct TransferableNetworkRequest: Identifiable, Codable, Sendable {
 
     // MARK: - Init
 
+    public var isWebView: Bool { source == "WebView" }
+
     public init(
         id: UUID,
         timestamp: Date,
@@ -63,7 +66,8 @@ public struct TransferableNetworkRequest: Identifiable, Codable, Sendable {
         isIntercepted: Bool,
         isEnvironmentRewritten: Bool,
         originalURL: String?,
-        screenName: String?
+        screenName: String?,
+        source: String? = nil
     ) {
         self.id = id
         self.timestamp = timestamp
@@ -84,5 +88,6 @@ public struct TransferableNetworkRequest: Identifiable, Codable, Sendable {
         self.isEnvironmentRewritten = isEnvironmentRewritten
         self.originalURL = originalURL
         self.screenName = screenName
+        self.source = source
     }
 }
