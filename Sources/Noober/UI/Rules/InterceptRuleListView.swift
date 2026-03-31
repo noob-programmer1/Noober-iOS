@@ -107,6 +107,7 @@ struct InterceptRuleListView: View {
             ForEach(filteredRules) { rule in
                 InterceptRuleRow(rule: rule) {
                     NooberTheme.hapticLight()
+                    NooberSound.playFaaa()
                     store.toggleInterceptRule(rule)
                 }
                 .contextMenu {
@@ -114,6 +115,7 @@ struct InterceptRuleListView: View {
                         Label("Edit", systemImage: "pencil")
                     }
                     Button {
+                        NooberSound.playFaaa()
                         store.toggleInterceptRule(rule)
                     } label: {
                         Label(rule.isEnabled ? "Disable" : "Enable",

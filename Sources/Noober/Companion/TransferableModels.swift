@@ -22,6 +22,7 @@ struct TransferableNetworkRequest: Codable, Sendable {
     let isEnvironmentRewritten: Bool
     let originalURL: String?
     let screenName: String?
+    let source: String?
 }
 
 // MARK: - WebSocket
@@ -66,6 +67,7 @@ struct TransferableLogEntry: Codable, Sendable {
     let message: String
     let file: String
     let line: UInt
+    let screenName: String?
 }
 
 // MARK: - Environment

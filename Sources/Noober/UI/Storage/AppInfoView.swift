@@ -7,6 +7,8 @@ struct AppInfoView: View {
     @State private var diskFree: String = "—"
     @State private var diskTotal: String = "—"
     @State private var copiedField: String?
+    @State private var prefsExpanded = false
+    @State private var soundEnabled: Bool = !NooberSound.isMuted
 
     private let timer = Timer.publish(every: 2, on: .main, in: .common).autoconnect()
 
@@ -101,11 +103,61 @@ struct AppInfoView: View {
                     Divider()
                     infoRow("Disk Total", diskTotal)
                 }
+
+                preferencesSection
             }
             .padding(16)
         }
         .onAppear { refreshDynamic() }
         .onReceive(timer) { _ in refreshDynamic() }
+    }
+
+    // MARK: - Preferences (collapsed by default)
+
+    private var preferencesSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    prefsExpanded.toggle()
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: prefsExpanded ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 9, weight: .bold))
+                    Text("Preferences")
+                        .font(.system(size: 12, weight: .bold))
+                        .textCase(.uppercase)
+                }
+                .foregroundColor(Color(uiColor: .tertiaryLabel))
+                .padding(.horizontal, 4)
+            }
+            .buttonStyle(.plain)
+
+            if prefsExpanded {
+                VStack(spacing: 0) {
+                    HStack {
+                        Text("Sound effects")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Toggle("", isOn: $soundEnabled)
+                            .labelsHidden()
+                            .scaleEffect(0.8)
+                            .onChange(of: soundEnabled) { newValue in
+                                NooberSound.isMuted = !newValue
+                            }
+                    }
+                    .padding(.vertical, 4)
+                }
+                .padding(12)
+                .background(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(Color(uiColor: .secondarySystemBackground))
+                )
+                .padding(.top, 8)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
     }
 
     // MARK: - Section

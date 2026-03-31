@@ -8,8 +8,7 @@ enum NooberTab: Int, CaseIterable {
     case storage = 1
     case logs = 2
     case rules = 3
-    case qa = 4
-    case aiFlows = 5
+    case more = 4
 }
 
 enum StorageSection: Int, CaseIterable {
@@ -56,7 +55,7 @@ final class NooberWindow {
             if FlowRecorder.shared.isRecording {
                 // Tap during recording → stop recording and show AI Flows tab
                 FlowRecorder.shared.stopRecording()
-                self?.showDebugger(tab: .aiFlows)
+                self?.showDebugger(tab: .more)
             } else {
                 self?.showDebugger()
             }
@@ -99,8 +98,7 @@ final class NooberWindow {
             makeTab(StorageTabContent(), title: "Storage", icon: "externaldrive", dismiss: dismiss),
             makeTab(LogsTabContent(), title: "Logs", icon: "list.bullet.rectangle", dismiss: dismiss),
             makeTab(RulesTabContent(), title: "Rules", icon: "shuffle", dismiss: dismiss),
-            makeTab(QATabContent(), title: "QA", icon: "checklist", dismiss: dismiss),
-            makeTab(AIFlowsView(), title: "AI Flows", icon: "brain.head.profile", dismiss: dismiss),
+            makeTab(MoreTabContent(), title: "More", icon: "ellipsis.circle", dismiss: dismiss),
         ]
 
         if let tab { tabBarController.selectedIndex = tab.rawValue }

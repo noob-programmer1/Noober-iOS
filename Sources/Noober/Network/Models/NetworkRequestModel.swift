@@ -21,6 +21,7 @@ struct NetworkRequestModel: Identifiable, Sendable {
     let isEnvironmentRewritten: Bool
     let originalURL: String?
     let screenName: String?
+    let source: RequestSource
 
     // MARK: - Content Type
 
@@ -98,6 +99,8 @@ struct NetworkRequestModel: Identifiable, Sendable {
         return String(data: data, encoding: .utf8) ?? "(binary, \(data.count) bytes)"
     }
 
+    var isWebView: Bool { source == .webView }
+
     init(
         request: URLRequest,
         response: HTTPURLResponse? = nil,
@@ -130,6 +133,45 @@ struct NetworkRequestModel: Identifiable, Sendable {
         self.isEnvironmentRewritten = isEnvironmentRewritten
         self.originalURL = originalURL
         self.screenName = screenName
+        self.source = .urlSession
+    }
+
+    /// Init for WebView-intercepted requests (fetch/XHR from JavaScript).
+    init(
+        webViewURL: String,
+        method: String,
+        statusCode: Int?,
+        duration: TimeInterval,
+        requestHeaders: [String: String] = [:],
+        requestBody: String? = nil,
+        responseBody: String?,
+        responseHeaders: [String: String] = [:],
+        errorDescription: String?,
+        type: String,
+        screenName: String?,
+        isMocked: Bool = false
+    ) {
+        let components = URLComponents(string: webViewURL)
+        self.id = UUID()
+        self.timestamp = Date()
+        self.url = webViewURL
+        self.host = components?.host ?? "unknown"
+        self.path = components?.path ?? "/"
+        self.method = method
+        self.requestHeaders = requestHeaders
+        self.requestBody = requestBody?.data(using: .utf8)
+        self.statusCode = statusCode
+        self.responseHeaders = responseHeaders
+        self.responseBody = responseBody?.data(using: .utf8)
+        self.duration = duration
+        self.errorDescription = errorDescription
+        self.mimeType = nil
+        self.isMocked = isMocked
+        self.isIntercepted = false
+        self.isEnvironmentRewritten = false
+        self.originalURL = nil
+        self.screenName = screenName
+        self.source = .webView
     }
 }
 
@@ -180,5 +222,10 @@ extension NetworkRequestModel {
         case pdf = "PDF"
         case binary = "BIN"
         case unknown = "—"
+    }
+
+    enum RequestSource: String, Codable, Sendable {
+        case urlSession = "URLSession"
+        case webView = "WebView"
     }
 }

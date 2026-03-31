@@ -24,7 +24,8 @@ extension NetworkRequestModel {
             isIntercepted: isIntercepted,
             isEnvironmentRewritten: isEnvironmentRewritten,
             originalURL: originalURL,
-            screenName: screenName
+            screenName: screenName,
+            source: source.rawValue
         )
     }
 }
@@ -73,7 +74,8 @@ extension LogEntry {
             category: category.rawValue,
             message: message,
             file: file,
-            line: line
+            line: line,
+            screenName: screenName
         )
     }
 }

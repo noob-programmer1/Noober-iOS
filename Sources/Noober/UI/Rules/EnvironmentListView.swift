@@ -19,6 +19,7 @@ struct EnvironmentListView: View {
                         ) {
                             if env.id == store.activeEnvironmentId { return }
                             if env.notes.isEmpty {
+                                NooberSound.playAreBaapRe()
                                 store.activate(id: env.id)
                             } else {
                                 confirmingEnv = env
@@ -38,6 +39,7 @@ struct EnvironmentListView: View {
                 Button("Cancel", role: .cancel) { confirmingEnv = nil }
                 Button("Switch") {
                     NooberTheme.hapticMedium()
+                    NooberSound.playAreBaapRe()
                     if let env = confirmingEnv {
                         store.activate(id: env.id)
                     }

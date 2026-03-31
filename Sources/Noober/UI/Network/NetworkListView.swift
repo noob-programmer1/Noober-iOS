@@ -14,6 +14,7 @@ struct NetworkListView: View {
     @State private var createInterceptRequest: NetworkRequestModel?
     @State private var groupByScreen = false
     @State private var selectedScreens: Set<String> = []
+    @State private var webViewOnly = false
 
     // MARK: - Computed
 
@@ -30,12 +31,20 @@ struct NetworkListView: View {
     private var activeFilterCount: Int {
         selectedMethods.count + selectedStatuses.count + selectedHosts.count
             + selectedScreens.count + (selectedEntryType != nil ? 1 : 0)
+            + (webViewOnly ? 1 : 0)
+    }
+
+    private var webViewCount: Int {
+        store.requests.filter(\.isWebView).count
     }
 
     private var filteredEntries: [NetworkEntry] {
         store.allEntries.filter { entry in
             // Type filter
             if let type = selectedEntryType, entry.entryType != type { return false }
+
+            // WebView filter
+            if webViewOnly && !entry.isWebView { return false }
 
             // Host filter
             if !selectedHosts.isEmpty && !selectedHosts.contains(entry.host) { return false }
@@ -150,7 +159,9 @@ struct NetworkListView: View {
             .sheet(isPresented: $showFilterSheet) {
                 FilterSheetView(
                     methods: uniqueMethods, hosts: uniqueHosts,
-                    selectedMethods: $selectedMethods, selectedStatuses: $selectedStatuses, selectedHosts: $selectedHosts
+                    hasWebViewRequests: webViewCount > 0,
+                    selectedMethods: $selectedMethods, selectedStatuses: $selectedStatuses,
+                    selectedHosts: $selectedHosts, webViewOnly: $webViewOnly
                 )
             }
 
@@ -181,6 +192,9 @@ struct NetworkListView: View {
                         selectedEntryType = nil
                     }
                 }
+                if webViewOnly {
+                    activeTag("WebView", color: .purple) { webViewOnly = false }
+                }
                 ForEach(Array(selectedMethods).sorted(), id: \.self) { m in
                     activeTag(m, color: NooberTheme.methodColor(m)) { selectedMethods.remove(m) }
                 }
@@ -196,7 +210,7 @@ struct NetworkListView: View {
                 Button {
                     NooberTheme.hapticLight()
                     withAnimation(.spring(response: 0.25)) {
-                        selectedEntryType = nil
+                        selectedEntryType = nil; webViewOnly = false
                         selectedMethods.removeAll(); selectedStatuses.removeAll(); selectedHosts.removeAll()
                         selectedScreens.removeAll()
                     }
@@ -232,6 +246,11 @@ struct NetworkListView: View {
                 }
                 FilterChip(title: "WS (\(store.webSocketConnections.count))", isSelected: selectedEntryType == .webSocket) {
                     selectedEntryType = selectedEntryType == .webSocket ? nil : .webSocket
+                }
+                if webViewCount > 0 {
+                    FilterChip(title: "WebView (\(webViewCount))", isSelected: webViewOnly) {
+                        webViewOnly.toggle()
+                    }
                 }
 
                 // Separator
@@ -451,7 +470,7 @@ struct NetworkListView: View {
             if activeFilterCount > 0 {
                 Button {
                     withAnimation {
-                        searchText = ""; selectedEntryType = nil
+                        searchText = ""; selectedEntryType = nil; webViewOnly = false
                         selectedMethods.removeAll(); selectedStatuses.removeAll(); selectedHosts.removeAll()
                         selectedScreens.removeAll()
                     }
@@ -517,6 +536,9 @@ private struct HTTPRowView: View {
                         }
                         if request.isEnvironmentRewritten {
                             TypeBadge(text: "ENV", color: NooberTheme.success)
+                        }
+                        if request.isWebView {
+                            TypeBadge(text: "WV", color: .purple)
                         }
                         Spacer()
                         DurationLabel(duration: request.duration)

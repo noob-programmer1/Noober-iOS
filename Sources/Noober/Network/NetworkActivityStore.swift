@@ -46,6 +46,13 @@ enum NetworkEntry: Identifiable, Sendable {
         case .webSocket: return nil
         }
     }
+
+    var isWebView: Bool {
+        switch self {
+        case .http(let r): return r.isWebView
+        case .webSocket: return false
+        }
+    }
 }
 
 // MARK: - Store

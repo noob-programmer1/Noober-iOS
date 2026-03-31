@@ -19,7 +19,10 @@ let package = Package(
         .target(
             name: "Noober",
             dependencies: [],
-            path: "Sources/Noober"
+            path: "Sources/Noober",
+            resources: [
+                .process("Resources")
+            ]
         ),
         .target(
             name: "NooberShared",

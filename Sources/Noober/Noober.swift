@@ -37,6 +37,7 @@ public final class Noober {
         LogStore.shared.clearAll()
         EnvironmentStore.shared.clearAll()
         QAChecklistStore.shared.clearAll()
+        CustomActionStore.shared.clearAll()
     }
 
     // MARK: - Environments
@@ -69,6 +70,24 @@ public final class Noober {
     ///
     public func registerChecklist(_ items: [QAChecklistItem]) {
         QAChecklistStore.shared.register(items)
+    }
+
+    // MARK: - Custom Actions
+
+    /// Register custom actions that appear in the debugger's Storage tab.
+    /// Useful for quick developer shortcuts like clearing caches or resetting state.
+    ///
+    ///     Noober.shared.registerActions([
+    ///         .init("Clear Cache", icon: "trash", group: "Storage") {
+    ///             CacheManager.shared.clearAll()
+    ///         },
+    ///         .init("Reset Onboarding", icon: "arrow.counterclockwise") {
+    ///             UserDefaults.standard.removeObject(forKey: "hasSeenOnboarding")
+    ///         },
+    ///     ])
+    ///
+    public func registerActions(_ actions: [CustomAction]) {
+        CustomActionStore.shared.register(actions)
     }
 
     // MARK: - Logging

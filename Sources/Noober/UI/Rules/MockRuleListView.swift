@@ -107,6 +107,7 @@ struct MockRuleListView: View {
             ForEach(filteredRules) { rule in
                 MockRuleRow(rule: rule) {
                     NooberTheme.hapticLight()
+                    NooberSound.playFaaa()
                     store.toggleMockRule(rule)
                 }
                 .contextMenu {
@@ -114,6 +115,7 @@ struct MockRuleListView: View {
                         Label("Edit", systemImage: "pencil")
                     }
                     Button {
+                        NooberSound.playFaaa()
                         store.toggleMockRule(rule)
                     } label: {
                         Label(rule.isEnabled ? "Disable" : "Enable",

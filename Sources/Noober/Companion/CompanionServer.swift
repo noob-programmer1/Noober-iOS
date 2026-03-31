@@ -181,16 +181,19 @@ final class CompanionServer {
                 guard let self else { return }
 
                 if let error = error as? NWError {
-                    // Connection error
-                    _ = error
                     self.handleConnectionLost()
                     return
                 }
 
                 if let error {
-                    _ = error
-                    self.handleConnectionLost()
-                    return
+                    // Decode errors (e.g. unknown message type) are NOT fatal —
+                    // skip the bad message and keep the connection alive.
+                    if error is DecodingError {
+                        // Continue receiving
+                    } else {
+                        self.handleConnectionLost()
+                        return
+                    }
                 }
 
                 if let message {

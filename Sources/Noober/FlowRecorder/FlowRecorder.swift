@@ -55,6 +55,29 @@ public final class FlowRecorder: ObservableObject {
         persist()
     }
 
+    // MARK: - Export / Import
+
+    /// Export all flows as JSON Data (for sharing/backup)
+    public func exportAllFlows() -> Data? {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        return try? encoder.encode(savedFlows)
+    }
+
+    /// Import flows from JSON Data (merges with existing, skips duplicates by name)
+    public func importFlows(from data: Data) -> Int {
+        guard let imported = try? JSONDecoder().decode([NooberFlow].self, from: data) else { return 0 }
+        var count = 0
+        for flow in imported {
+            if !savedFlows.contains(where: { $0.name == flow.name }) {
+                savedFlows.append(flow)
+                count += 1
+            }
+        }
+        if count > 0 { persist() }
+        return count
+    }
+
     // MARK: - Touch Handling (called with pre-extracted data from TouchInterceptor)
 
     func handleTouchBeganAt(_ point: CGPoint, screen: String) {
@@ -112,8 +135,17 @@ public final class FlowRecorder: ObservableObject {
     // MARK: - Persistence
 
     private let fileURL: URL = {
+        // Save to a shared location that survives app reinstalls on the simulator.
+        // /tmp/noober/ persists across installs (it's the simulator's tmp, not the app's sandbox).
+        // On a real device, falls back to Documents directory.
+        #if targetEnvironment(simulator)
+        let dir = URL(fileURLWithPath: "/tmp/noober")
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir.appendingPathComponent("noober_flows.json")
+        #else
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         return docs.appendingPathComponent("noober_flows.json")
+        #endif
     }()
 
     func loadSavedFlows() {

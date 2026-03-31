@@ -43,6 +43,7 @@ public struct LogEntry: Identifiable, Sendable {
     public let message: String
     public let file: String
     public let line: UInt
+    public let screenName: String
 
     init(level: LogLevel, category: LogCategory, message: String, file: String, line: UInt) {
         self.id = UUID()
@@ -52,5 +53,6 @@ public struct LogEntry: Identifiable, Sendable {
         self.message = message
         self.file = file
         self.line = line
+        self.screenName = ScreenTracker.shared.currentScreen
     }
 }

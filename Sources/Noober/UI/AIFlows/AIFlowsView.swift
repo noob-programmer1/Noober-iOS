@@ -7,13 +7,32 @@ struct AIFlowsView: View {
     @State private var flowDescription = ""
     @State private var showNameForm = false
     @State private var expandedFlowId: UUID?
+    @State private var showExportShare = false
+    @State private var showImportPicker = false
+    @State private var importMessage = ""
 
     var body: some View {
         VStack(spacing: 0) {
             header
+
+            // Import status message
+            if !importMessage.isEmpty {
+                Text(importMessage)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.green)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 4)
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { importMessage = "" }
+                    }
+            }
+
             if showNameForm { nameForm } else { recordButton.padding(.horizontal, 16) }
             Divider().padding(.top, 12)
             if recorder.savedFlows.isEmpty { emptyState } else { flowsList }
+        }
+        .sheet(isPresented: $showImportPicker) {
+            ImportFlowView(recorder: recorder, message: $importMessage)
         }
     }
 
@@ -28,7 +47,24 @@ struct AIFlowsView: View {
                 Text("AI Flows")
                     .font(.system(size: 16, weight: .bold))
                 Spacer()
+
+                // Import
+                Button { showImportPicker = true } label: {
+                    Image(systemName: "square.and.arrow.down")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+
+                // Export
                 if !recorder.savedFlows.isEmpty {
+                    Button { exportFlows() } label: {
+                        Image(systemName: "square.and.arrow.up")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+
                     Text("\(recorder.savedFlows.count)")
                         .font(.system(size: 10, weight: .bold))
                         .foregroundColor(.white)
@@ -363,5 +399,62 @@ struct AIFlowsView: View {
 
             Spacer()
         }
+    }
+
+    // MARK: - Export
+
+    private func exportFlows() {
+        guard let data = recorder.exportAllFlows(),
+              let json = String(data: data, encoding: .utf8) else { return }
+        UIPasteboard.general.string = json
+        importMessage = "✅ Copied \(recorder.savedFlows.count) flows to clipboard"
+    }
+}
+
+// MARK: - Import View
+
+struct ImportFlowView: View {
+    let recorder: FlowRecorder
+    @Binding var message: String
+    @State private var jsonText = ""
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("Import Flows")
+                .font(.system(size: 17, weight: .bold))
+
+            Text("Paste exported JSON below")
+                .font(.system(size: 13))
+                .foregroundColor(.secondary)
+
+            TextEditor(text: $jsonText)
+                .font(.system(size: 11, design: .monospaced))
+                .frame(minHeight: 150)
+                .padding(4)
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.3)))
+
+            HStack(spacing: 12) {
+                Button("Paste from Clipboard") {
+                    jsonText = UIPasteboard.general.string ?? ""
+                }
+                .font(.system(size: 13))
+
+                Spacer()
+
+                Button("Cancel") { dismiss() }
+                    .font(.system(size: 13))
+
+                Button("Import") {
+                    guard let data = jsonText.data(using: .utf8) else { return }
+                    let count = recorder.importFlows(from: data)
+                    message = count > 0 ? "✅ Imported \(count) new flow(s)" : "No new flows to import"
+                    dismiss()
+                }
+                .font(.system(size: 13, weight: .bold))
+                .disabled(jsonText.isEmpty)
+            }
+        }
+        .padding(20)
     }
 }

@@ -4,21 +4,37 @@ struct FilterSheetView: View {
 
     let methods: [String]
     let hosts: [String]
+    let hasWebViewRequests: Bool
 
     @Binding var selectedMethods: Set<String>
     @Binding var selectedStatuses: Set<NetworkRequestModel.StatusCodeCategory>
     @Binding var selectedHosts: Set<String>
+    @Binding var webViewOnly: Bool
 
     @Environment(\.dismiss) private var dismiss
 
     private var totalActive: Int {
-        selectedMethods.count + selectedStatuses.count + selectedHosts.count
+        selectedMethods.count + selectedStatuses.count + selectedHosts.count + (webViewOnly ? 1 : 0)
     }
 
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
+                    // Source
+                    if hasWebViewRequests {
+                        filterSection(title: "Source", icon: "globe") {
+                            chipGrid {
+                                toggleChip(text: "All Sources", isSelected: !webViewOnly, color: NooberTheme.accent) {
+                                    webViewOnly = false
+                                }
+                                toggleChip(text: "WebView Only", isSelected: webViewOnly, color: .purple) {
+                                    webViewOnly = true
+                                }
+                            }
+                        }
+                    }
+
                     // Methods
                     filterSection(title: "HTTP Method", icon: "arrow.up.arrow.down") {
                         chipGrid {
@@ -62,6 +78,7 @@ struct FilterSheetView: View {
                         Button("Reset") {
                             withAnimation(.spring(response: 0.25)) {
                                 selectedMethods.removeAll(); selectedStatuses.removeAll(); selectedHosts.removeAll()
+                                webViewOnly = false
                             }
                         }
                         .foregroundColor(NooberTheme.error)
