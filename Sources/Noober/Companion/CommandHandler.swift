@@ -40,6 +40,12 @@ enum CommandHandler {
             handleScreenshot()
         case .commandScreenHTML:
             handleScreenHTML()
+        case .commandTap:
+            handleTap(message)
+        case .commandSwipe:
+            handleSwipe(message)
+        case .commandTypeText:
+            handleTypeText(message)
         default:
             break
         }
@@ -136,7 +142,7 @@ enum CommandHandler {
         let rule = MockRule(
             name: cmd.name ?? "Mock \(cmd.urlPattern.prefix(30))",
             matchPattern: URLMatchPattern(
-                mode: URLMatchPattern.MatchMode(rawValue: cmd.matchMode ?? "contains") ?? .contains,
+                mode: URLMatchMode(rawValue: cmd.matchMode ?? "Contains") ?? .contains,
                 pattern: cmd.urlPattern
             ),
             httpMethod: cmd.httpMethod,
@@ -151,7 +157,7 @@ enum CommandHandler {
         guard let cmd = try? message.decode(RemoveRuleCommand.self),
               let uuid = UUID(uuidString: cmd.ruleId),
               let rule = RulesStore.shared.mockRules.first(where: { $0.id == uuid }) else { return }
-        RulesStore.shared.removeMockRule(rule)
+        RulesStore.shared.deleteMockRule(rule)
     }
 
     private static func handleAddInterceptRule(_ message: CompanionMessage) {
@@ -160,7 +166,7 @@ enum CommandHandler {
         let rule = InterceptRule(
             name: cmd.name ?? "Intercept \(cmd.urlPattern.prefix(30))",
             matchPattern: URLMatchPattern(
-                mode: URLMatchPattern.MatchMode(rawValue: cmd.matchMode ?? "contains") ?? .contains,
+                mode: URLMatchMode(rawValue: cmd.matchMode ?? "Contains") ?? .contains,
                 pattern: cmd.urlPattern
             ),
             httpMethod: cmd.httpMethod
@@ -172,7 +178,7 @@ enum CommandHandler {
         guard let cmd = try? message.decode(RemoveRuleCommand.self),
               let uuid = UUID(uuidString: cmd.ruleId),
               let rule = RulesStore.shared.interceptRules.first(where: { $0.id == uuid }) else { return }
-        RulesStore.shared.removeInterceptRule(rule)
+        RulesStore.shared.deleteInterceptRule(rule)
     }
 
     // MARK: - Replay Request
@@ -411,5 +417,63 @@ enum CommandHandler {
         if let message = try? CompanionMessage(type: .responseSnapshot, payload: response) {
             CompanionServer.shared.send(message)
         }
+    }
+
+    // MARK: - Touch Input Synthesis
+
+    struct InputResponse: Codable {
+        let success: Bool
+        let message: String
+    }
+
+    private static func sendInputResponse(_ ok: Bool, _ detail: String) {
+        let response = InputResponse(success: ok, message: detail)
+        if let msg = try? CompanionMessage(type: .responseInput, payload: response) {
+            CompanionServer.shared.send(msg)
+        }
+    }
+
+    private static func handleTap(_ message: CompanionMessage) {
+        struct TapCommand: Decodable {
+            let x: Int
+            let y: Int
+        }
+        guard let cmd = try? message.decode(TapCommand.self) else {
+            sendInputResponse(false, "Invalid tap command")
+            return
+        }
+        let point = CGPoint(x: cmd.x, y: cmd.y)
+        TouchSynthesizer.tap(at: point)
+        sendInputResponse(true, "OK: tapped (\(cmd.x),\(cmd.y))")
+    }
+
+    private static func handleSwipe(_ message: CompanionMessage) {
+        struct SwipeCommand: Decodable {
+            let x1: Int
+            let y1: Int
+            let x2: Int
+            let y2: Int
+            let duration: Double?
+        }
+        guard let cmd = try? message.decode(SwipeCommand.self) else {
+            sendInputResponse(false, "Invalid swipe command")
+            return
+        }
+        let from = CGPoint(x: cmd.x1, y: cmd.y1)
+        let to = CGPoint(x: cmd.x2, y: cmd.y2)
+        TouchSynthesizer.swipe(from: from, to: to, duration: cmd.duration ?? 0.3)
+        sendInputResponse(true, "OK: swiped (\(cmd.x1),\(cmd.y1))->(\(cmd.x2),\(cmd.y2))")
+    }
+
+    private static func handleTypeText(_ message: CompanionMessage) {
+        struct TypeCommand: Decodable {
+            let text: String
+        }
+        guard let cmd = try? message.decode(TypeCommand.self) else {
+            sendInputResponse(false, "Invalid type command")
+            return
+        }
+        TouchSynthesizer.typeText(cmd.text)
+        sendInputResponse(true, "OK: typed \(cmd.text.count) chars")
     }
 }

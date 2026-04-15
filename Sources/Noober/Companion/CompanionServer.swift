@@ -8,7 +8,11 @@ final class CompanionServer {
 
     static let shared = CompanionServer()
 
+    /// Fixed port for USB tunnel connections (iproxy forwards to this port)
+    static let fixedPort: UInt16 = 54321
+
     private var listener: NWListener?
+    private var fixedPortListener: NWListener?
     private var activeConnection: NWConnection?
     private var observer: StoreObserver?
     private let queue = DispatchQueue(label: "com.noober.companion", qos: .userInitiated)
@@ -51,6 +55,28 @@ final class CompanionServer {
             // Failed to create listener - silently ignore.
             // Companion is a nice-to-have feature.
         }
+
+        // Also listen on a fixed port for USB tunnel connections (real device via iproxy)
+        do {
+            let fixedParams = NWParameters.companionTCP
+            let fixedListener = try NWListener(using: fixedParams, on: NWEndpoint.Port(rawValue: Self.fixedPort)!)
+            fixedListener.stateUpdateHandler = { [weak self] state in
+                Task { @MainActor in
+                    if case .ready = state {
+                        print("[Noober] Fixed port listener ready on \(Self.fixedPort)")
+                    }
+                }
+            }
+            fixedListener.newConnectionHandler = { [weak self] connection in
+                Task { @MainActor in
+                    self?.handleNewConnection(connection)
+                }
+            }
+            self.fixedPortListener = fixedListener
+            fixedListener.start(queue: queue)
+        } catch {
+            // Port may be in use — not critical, Bonjour still works
+        }
     }
 
     func stopAdvertising() {
@@ -65,6 +91,8 @@ final class CompanionServer {
 
         listener?.cancel()
         listener = nil
+        fixedPortListener?.cancel()
+        fixedPortListener = nil
 
         isConnected = false
         pendingSendCount = 0
@@ -75,10 +103,12 @@ final class CompanionServer {
     func send(_ message: CompanionMessage) {
         guard let connection = activeConnection, isConnected else { return }
 
-        // Back-pressure: skip non-critical messages if too many are in flight
+        // Back-pressure: skip non-critical event messages if too many are in flight.
+        // NEVER drop command responses — the MCP server is waiting on them.
         if pendingSendCount >= maxPendingSends {
-            // Drop non-heartbeat, non-sync messages under pressure
-            if message.type != .heartbeat && message.type != .syncFull {
+            let isResponse = message.type.rawValue.hasPrefix("response.")
+            let isCritical = isResponse || message.type == .heartbeat || message.type == .syncFull
+            if !isCritical {
                 return
             }
         }

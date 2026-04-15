@@ -42,6 +42,12 @@ enum CompanionMessageType: String, Codable, Sendable {
     case commandScreenHTML = "command.screenHTML"
     case responseScreenHTML = "response.screenHTML"
 
+    // Input synthesis (macOS -> iOS)
+    case commandTap = "command.tap"
+    case commandSwipe = "command.swipe"
+    case commandTypeText = "command.typeText"
+    case responseInput = "response.input"
+
     // Responses (iOS -> macOS, in response to commands)
     case responseSnapshot = "response.snapshot"
 

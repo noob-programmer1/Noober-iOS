@@ -116,7 +116,6 @@ final class NooberWindow {
         }
         host.view.backgroundColor = .systemBackground
 
-        // Navigation bar via UIKit (replaces SwiftUI NavigationView)
         let titleStack = UIStackView()
         titleStack.axis = .vertical
         titleStack.spacing = 1
