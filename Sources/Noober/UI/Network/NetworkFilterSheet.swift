@@ -11,7 +11,7 @@ struct FilterSheetView: View {
     @Binding var selectedHosts: Set<String>
     @Binding var webViewOnly: Bool
 
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.presentationMode) private var presentationMode
 
     private var totalActive: Int {
         selectedMethods.count + selectedStatuses.count + selectedHosts.count + (webViewOnly ? 1 : 0)
@@ -69,11 +69,10 @@ struct FilterSheetView: View {
                 }
                 .padding(20)
             }
-            .background(Color(uiColor: .systemGroupedBackground))
-            .navigationTitle("Filters")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+            .background(Color(.systemGroupedBackground))
+            .nooberNavigationBarTitle("Filters")
+            .navigationBarItems(
+                leading: Group {
                     if totalActive > 0 {
                         Button("Reset") {
                             withAnimation(.spring(response: 0.25)) {
@@ -83,18 +82,23 @@ struct FilterSheetView: View {
                         }
                         .foregroundColor(NooberTheme.error)
                     }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") { dismiss() }
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(NooberTheme.accent)
-                }
-            }
+                },
+                trailing: Button("Done") { presentationMode.wrappedValue.dismiss() }
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(NooberTheme.accent)
+            )
         }
     }
 
+    @ViewBuilder
     private func chipGrid<Content: View>(@ViewBuilder content: () -> Content) -> some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 70), spacing: 8)], alignment: .leading, spacing: 8) { content() }
+        if #available(iOS 14, *) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 70), spacing: 8)], alignment: .leading, spacing: 8) { content() }
+        } else {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) { content() }
+            }
+        }
     }
 
     private func filterSection<Content: View>(title: String, icon: String, @ViewBuilder content: () -> Content) -> some View {
@@ -107,7 +111,7 @@ struct FilterSheetView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color(uiColor: .systemBackground)))
+        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color(.systemBackground)))
     }
 
     private func toggleChip(text: String, isSelected: Bool, color: Color, action: @escaping () -> Void) -> some View {

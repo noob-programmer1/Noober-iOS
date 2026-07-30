@@ -11,7 +11,7 @@ struct CustomActionListView: View {
             emptyState
         } else {
             ScrollView {
-                LazyVStack(spacing: 16) {
+                NooberLazyVStack(spacing: 16) {
                     ForEach(store.groupedActions, id: \.group) { group in
                         actionSection(group: group.group, actions: group.actions)
                     }
@@ -42,7 +42,7 @@ struct CustomActionListView: View {
             }
             .background(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color(uiColor: .secondarySystemBackground))
+                    .fill(Color(.secondarySystemBackground))
             )
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
@@ -64,7 +64,7 @@ struct CustomActionListView: View {
                         .frame(width: 32, height: 32)
 
                     if isRunning {
-                        ProgressView()
+                        NooberProgressView()
                             .scaleEffect(0.7)
                     } else if isCompleted {
                         Image(systemName: "checkmark")
@@ -126,18 +126,18 @@ struct CustomActionListView: View {
             Spacer()
             ZStack {
                 Circle()
-                    .fill(Color(uiColor: .tertiarySystemFill))
+                    .fill(Color(.tertiarySystemFill))
                     .frame(width: 80, height: 80)
                 Image(systemName: "bolt.fill")
                     .font(.system(size: 32, weight: .thin))
-                    .foregroundColor(Color(uiColor: .tertiaryLabel))
+                    .foregroundColor(Color(.tertiaryLabel))
             }
             Text("No actions registered")
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(.secondary)
             Text("Register actions in your app:\nNoober.shared.registerActions([...])")
                 .font(.system(size: 13, design: .monospaced))
-                .foregroundColor(Color(uiColor: .tertiaryLabel))
+                .foregroundColor(Color(.tertiaryLabel))
                 .multilineTextAlignment(.center)
             Spacer()
         }

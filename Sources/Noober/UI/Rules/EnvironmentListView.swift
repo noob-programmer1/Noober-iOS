@@ -29,24 +29,23 @@ struct EnvironmentListView: View {
                 }
                 .padding(16)
             }
-            .alert(
-                "Switch to \(confirmingEnv?.name ?? "")?",
-                isPresented: Binding(
-                    get: { confirmingEnv != nil },
-                    set: { if !$0 { confirmingEnv = nil } }
+            .alert(isPresented: Binding(
+                get: { confirmingEnv != nil },
+                set: { if !$0 { confirmingEnv = nil } }
+            )) {
+                Alert(
+                    title: Text("Switch to \(confirmingEnv?.name ?? "")?"),
+                    message: Text(confirmingEnv?.notes ?? ""),
+                    primaryButton: .default(Text("Switch")) {
+                        NooberTheme.hapticMedium()
+                        NooberSound.playAreBaapRe()
+                        if let env = confirmingEnv {
+                            store.activate(id: env.id)
+                        }
+                        confirmingEnv = nil
+                    },
+                    secondaryButton: .cancel { confirmingEnv = nil }
                 )
-            ) {
-                Button("Cancel", role: .cancel) { confirmingEnv = nil }
-                Button("Switch") {
-                    NooberTheme.hapticMedium()
-                    NooberSound.playAreBaapRe()
-                    if let env = confirmingEnv {
-                        store.activate(id: env.id)
-                    }
-                    confirmingEnv = nil
-                }
-            } message: {
-                Text(confirmingEnv?.notes ?? "")
             }
         }
     }
@@ -57,16 +56,16 @@ struct EnvironmentListView: View {
         VStack(spacing: 16) {
             Spacer()
             ZStack {
-                Circle().fill(Color(uiColor: .tertiarySystemFill)).frame(width: 80, height: 80)
+                Circle().fill(Color(.tertiarySystemFill)).frame(width: 80, height: 80)
                 Image(systemName: "server.rack")
                     .font(.system(size: 32, weight: .thin))
-                    .foregroundColor(Color(uiColor: .tertiaryLabel))
+                    .foregroundColor(Color(.tertiaryLabel))
             }
             Text("No environments")
                 .font(.system(size: 17, weight: .semibold)).foregroundColor(.secondary)
             Text("Register environments in your app:\nNoober.shared.registerEnvironments([...])")
                 .font(.system(size: 13, design: .monospaced))
-                .foregroundColor(Color(uiColor: .tertiaryLabel))
+                .foregroundColor(Color(.tertiaryLabel))
                 .multilineTextAlignment(.center)
             Spacer()
         }
@@ -89,7 +88,7 @@ private struct EnvironmentCard: View {
                 // Active indicator
                 Image(systemName: isActive ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 22))
-                    .foregroundColor(isActive ? NooberTheme.success : Color(uiColor: .tertiaryLabel))
+                    .foregroundColor(isActive ? NooberTheme.success : Color(.tertiaryLabel))
 
                 VStack(alignment: .leading, spacing: 4) {
                     // Name + default badge
@@ -104,7 +103,7 @@ private struct EnvironmentCard: View {
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
                                 .background(
-                                    Capsule().fill(Color(uiColor: .tertiaryLabel))
+                                    Capsule().fill(Color(.tertiaryLabel))
                                 )
                         }
                         if isActive && !isDefault {
@@ -147,7 +146,7 @@ private struct EnvironmentCard: View {
             .padding(14)
             .background(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color(uiColor: .secondarySystemBackground))
+                    .fill(Color(.secondarySystemBackground))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)

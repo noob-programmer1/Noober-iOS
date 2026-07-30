@@ -13,7 +13,7 @@ struct QAChecklistListView: View {
                 headerBar
                 Divider()
                 ScrollView {
-                    LazyVStack(spacing: 10) {
+                    NooberLazyVStack(spacing: 10) {
                         ForEach(store.sortedResults) { result in
                             checklistCard(result)
                         }
@@ -49,7 +49,7 @@ struct QAChecklistListView: View {
                 let failedWidth = geo.size.width * CGFloat(store.failedCount) / CGFloat(total)
                 ZStack(alignment: .leading) {
                     RoundedRectangle(cornerRadius: 3)
-                        .fill(Color(uiColor: .tertiarySystemFill))
+                        .fill(Color(.tertiarySystemFill))
                     HStack(spacing: 0) {
                         if passedWidth > 0 {
                             RoundedRectangle(cornerRadius: 3)
@@ -68,7 +68,7 @@ struct QAChecklistListView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color(.secondarySystemBackground))
     }
 
     private func statLabel(count: Int, label: String, color: Color) -> some View {
@@ -193,7 +193,7 @@ struct QAChecklistListView: View {
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color(uiColor: .secondarySystemBackground))
+                .fill(Color(.secondarySystemBackground))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -285,18 +285,18 @@ struct QAChecklistListView: View {
             Spacer()
             ZStack {
                 Circle()
-                    .fill(Color(uiColor: .tertiarySystemFill))
+                    .fill(Color(.tertiarySystemFill))
                     .frame(width: 80, height: 80)
                 Image(systemName: "checklist")
                     .font(.system(size: 32, weight: .thin))
-                    .foregroundColor(Color(uiColor: .tertiaryLabel))
+                    .foregroundColor(Color(.tertiaryLabel))
             }
             Text("No checklist registered")
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(.secondary)
             Text("Register a checklist in your app:\nNoober.shared.registerChecklist([...])")
                 .font(.system(size: 13, design: .monospaced))
-                .foregroundColor(Color(uiColor: .tertiaryLabel))
+                .foregroundColor(Color(.tertiaryLabel))
                 .multilineTextAlignment(.center)
             Spacer()
         }

@@ -4,7 +4,7 @@ struct KeychainEditView: View {
 
     @ObservedObject var store: KeychainStore
     let existingEntry: KeychainEntry?
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.presentationMode) private var presentationMode
 
     @State private var account: String = ""
     @State private var value: String = ""
@@ -35,7 +35,7 @@ struct KeychainEditView: View {
                 Section {
                     TextField("Account identifier", text: $account)
                         .font(.system(size: 14, design: .monospaced))
-                        .textInputAutocapitalization(.never)
+                        .autocapitalization(.none)
                         .disableAutocorrection(true)
                 } header: {
                     Text("Account")
@@ -47,7 +47,7 @@ struct KeychainEditView: View {
                         text: $service
                     )
                     .font(.system(size: 14, design: .monospaced))
-                    .textInputAutocapitalization(.never)
+                    .autocapitalization(.none)
                     .disableAutocorrection(true)
                 } header: {
                     Text(serviceLabel)
@@ -58,11 +58,11 @@ struct KeychainEditView: View {
                         if value.isEmpty {
                             Text("Enter secret value...")
                                 .font(.system(size: 14, design: .monospaced))
-                                .foregroundColor(Color(uiColor: .placeholderText))
+                                .foregroundColor(Color(.placeholderText))
                                 .padding(.top, 8)
                                 .padding(.leading, 4)
                         }
-                        TextEditor(text: $value)
+                        NooberTextEditor(text: $value)
                             .font(.system(size: 14, design: .monospaced))
                             .frame(minHeight: 120)
                     }
@@ -70,30 +70,25 @@ struct KeychainEditView: View {
                     Text("Value")
                 }
             }
-            .navigationTitle(isEditing ? "Edit Item" : "Add Item")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
-                        .foregroundColor(.secondary)
+            .nooberNavigationBarTitle(isEditing ? "Edit Item" : "Add Item")
+            .navigationBarItems(
+                leading: Button("Cancel") { presentationMode.wrappedValue.dismiss() }
+                    .foregroundColor(.secondary),
+                trailing: Button("Save") {
+                    store.saveItem(
+                        account: account,
+                        value: value,
+                        service: service,
+                        itemClass: selectedClass,
+                        originalEntry: existingEntry
+                    )
+                    presentationMode.wrappedValue.dismiss()
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        store.saveItem(
-                            account: account,
-                            value: value,
-                            service: service,
-                            itemClass: selectedClass,
-                            originalEntry: existingEntry
-                        )
-                        dismiss()
-                    }
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(NooberTheme.accent)
-                    .disabled(account.trimmingCharacters(in: .whitespaces).isEmpty ||
-                              service.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
-            }
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(NooberTheme.accent)
+                .disabled(account.trimmingCharacters(in: .whitespaces).isEmpty ||
+                          service.trimmingCharacters(in: .whitespaces).isEmpty)
+            )
             .onAppear {
                 if let entry = existingEntry {
                     account = entry.account

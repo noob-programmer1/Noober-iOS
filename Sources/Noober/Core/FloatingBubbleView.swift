@@ -1,10 +1,13 @@
 import SwiftUI
+import Combine
 
 struct FloatingBubbleView: View {
 
     let onTap: () -> Void
 
-    @StateObject private var store = NetworkActivityStore.shared
+    @ObservedObject private var store = NetworkActivityStore.shared
+    @State private var lastSeenPulseID: UInt = NetworkActivityStore.shared.pulseID
+    @State private var lastSeenActiveRequestCount: Int = NetworkActivityStore.shared.activeRequestCount
 
     // MARK: - Drag state
 
@@ -65,10 +68,14 @@ struct FloatingBubbleView: View {
                             isDragging = false
                         }
                 )
-                .onChange(of: store.pulseID) { _ in
+                .onReceive(store.$pulseID) { newValue in
+                    guard newValue != lastSeenPulseID else { return }
+                    lastSeenPulseID = newValue
                     triggerPulse()
                 }
-                .onChange(of: store.activeRequestCount) { count in
+                .onReceive(store.$activeRequestCount) { count in
+                    guard count != lastSeenActiveRequestCount else { return }
+                    lastSeenActiveRequestCount = count
                     withAnimation(.spring(response: 0.3)) {
                         requestCountBadge = count
                         showBadge = count > 0
@@ -84,7 +91,7 @@ struct FloatingBubbleView: View {
                     }
                 }
         }
-        .ignoresSafeArea()
+        .edgesIgnoringSafeArea(.all)
     }
 
     // MARK: - Bubble content

@@ -4,7 +4,7 @@ struct UserDefaultsEditView: View {
 
     @ObservedObject var store: UserDefaultsStore
     let existingEntry: UserDefaultsEntry?
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.presentationMode) private var presentationMode
 
     @State private var key: String = ""
     @State private var value: String = ""
@@ -17,7 +17,7 @@ struct UserDefaultsEditView: View {
                 Section {
                     TextField("Key name", text: $key)
                         .font(.system(size: 14, design: .monospaced))
-                        .textInputAutocapitalization(.never)
+                        .autocapitalization(.none)
                         .disableAutocorrection(true)
                         .disabled(isEditing)
                         .opacity(isEditing ? 0.6 : 1)
@@ -30,11 +30,11 @@ struct UserDefaultsEditView: View {
                         if value.isEmpty {
                             Text("Enter value...")
                                 .font(.system(size: 14, design: .monospaced))
-                                .foregroundColor(Color(uiColor: .placeholderText))
+                                .foregroundColor(Color(.placeholderText))
                                 .padding(.top, 8)
                                 .padding(.leading, 4)
                         }
-                        TextEditor(text: $value)
+                        NooberTextEditor(text: $value)
                             .font(.system(size: 14, design: .monospaced))
                             .frame(minHeight: 150)
                     }
@@ -53,23 +53,18 @@ struct UserDefaultsEditView: View {
                     }
                 }
             }
-            .navigationTitle(isEditing ? "Edit Value" : "Add Entry")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
-                        .foregroundColor(.secondary)
+            .nooberNavigationBarTitle(isEditing ? "Edit Value" : "Add Entry")
+            .navigationBarItems(
+                leading: Button("Cancel") { presentationMode.wrappedValue.dismiss() }
+                    .foregroundColor(.secondary),
+                trailing: Button("Save") {
+                    store.setValue(value, forKey: key)
+                    presentationMode.wrappedValue.dismiss()
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        store.setValue(value, forKey: key)
-                        dismiss()
-                    }
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(NooberTheme.accent)
-                    .disabled(key.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
-            }
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(NooberTheme.accent)
+                .disabled(key.trimmingCharacters(in: .whitespaces).isEmpty)
+            )
             .onAppear {
                 if let entry = existingEntry {
                     key = entry.key

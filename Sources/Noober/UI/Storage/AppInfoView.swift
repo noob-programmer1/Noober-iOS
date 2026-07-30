@@ -124,11 +124,10 @@ struct AppInfoView: View {
                 HStack(spacing: 4) {
                     Image(systemName: prefsExpanded ? "chevron.down" : "chevron.right")
                         .font(.system(size: 9, weight: .bold))
-                    Text("Preferences")
+                    Text("PREFERENCES")
                         .font(.system(size: 12, weight: .bold))
-                        .textCase(.uppercase)
                 }
-                .foregroundColor(Color(uiColor: .tertiaryLabel))
+                .foregroundColor(Color(.tertiaryLabel))
                 .padding(.horizontal, 4)
             }
             .buttonStyle(.plain)
@@ -140,19 +139,22 @@ struct AppInfoView: View {
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.secondary)
                         Spacer()
-                        Toggle("", isOn: $soundEnabled)
-                            .labelsHidden()
-                            .scaleEffect(0.8)
-                            .onChange(of: soundEnabled) { newValue in
+                        Toggle("", isOn: Binding(
+                            get: { soundEnabled },
+                            set: { newValue in
+                                soundEnabled = newValue
                                 NooberSound.isMuted = !newValue
                             }
+                        ))
+                            .labelsHidden()
+                            .scaleEffect(0.8)
                     }
                     .padding(.vertical, 4)
                 }
                 .padding(12)
                 .background(
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(Color(uiColor: .secondarySystemBackground))
+                        .fill(Color(.secondarySystemBackground))
                 )
                 .padding(.top, 8)
                 .transition(.opacity.combined(with: .move(edge: .top)))
@@ -164,10 +166,9 @@ struct AppInfoView: View {
 
     private func infoSection<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(title)
+            Text(title.uppercased())
                 .font(.system(size: 12, weight: .bold))
                 .foregroundColor(NooberTheme.accent)
-                .textCase(.uppercase)
                 .padding(.bottom, 8)
                 .padding(.horizontal, 4)
 
@@ -177,7 +178,7 @@ struct AppInfoView: View {
             .padding(12)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color(uiColor: .secondarySystemBackground))
+                    .fill(Color(.secondarySystemBackground))
             )
         }
     }
@@ -202,7 +203,7 @@ struct AppInfoView: View {
                     .font(.system(size: 13, weight: .regular, design: .monospaced))
                     .foregroundColor(copiedField == key ? NooberTheme.success : .primary)
                     .lineLimit(1)
-                    .textSelection(.enabled)
+                    .nooberTextSelection()
             }
             .padding(.vertical, 4)
         }

@@ -4,7 +4,7 @@ struct RewriteRuleEditView: View {
 
     @ObservedObject var store: RulesStore
     let existingRule: URLRewriteRule?
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.presentationMode) private var presentationMode
 
     @State private var name = ""
     @State private var matchMode: URLMatchMode = .host
@@ -61,7 +61,7 @@ struct RewriteRuleEditView: View {
                     TextField(patternPlaceholder, text: $pattern)
                         .font(.system(size: 13, design: .monospaced))
                         .textFieldStyle(.plain)
-                        .textInputAutocapitalization(.never)
+                        .autocapitalization(.none)
                         .disableAutocorrection(true)
                         .padding(10)
                         .background(fieldBackground)
@@ -72,7 +72,7 @@ struct RewriteRuleEditView: View {
                     TextField("api.staging.com", text: $replacement)
                         .font(.system(size: 13, design: .monospaced))
                         .textFieldStyle(.plain)
-                        .textInputAutocapitalization(.never)
+                        .autocapitalization(.none)
                         .disableAutocorrection(true)
                         .padding(10)
                         .background(fieldBackground)
@@ -91,23 +91,18 @@ struct RewriteRuleEditView: View {
                 }
                 .padding(.top, 8)
             }
-            .background(Color(uiColor: .systemGroupedBackground))
-            .navigationTitle(existingRule != nil ? "Edit Rule" : "New Rewrite Rule")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
-                        .foregroundColor(.secondary)
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") { save() }
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(NooberTheme.accent)
-                        .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty
-                                  || pattern.trimmingCharacters(in: .whitespaces).isEmpty
-                                  || replacement.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
-            }
+            .background(Color(.systemGroupedBackground))
+            .nooberNavigationBarTitle(existingRule != nil ? "Edit Rule" : "New Rewrite Rule")
+            .navigationBarItems(
+                leading: Button("Cancel") { presentationMode.wrappedValue.dismiss() }
+                    .foregroundColor(.secondary),
+                trailing: Button("Save") { save() }
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(NooberTheme.accent)
+                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty
+                              || pattern.trimmingCharacters(in: .whitespaces).isEmpty
+                              || replacement.trimmingCharacters(in: .whitespaces).isEmpty)
+            )
             .onAppear {
                 if let rule = existingRule {
                     name = rule.name
@@ -132,14 +127,13 @@ struct RewriteRuleEditView: View {
 
     private var fieldBackground: some View {
         RoundedRectangle(cornerRadius: 8, style: .continuous)
-            .fill(Color(uiColor: .tertiarySystemFill))
+            .fill(Color(.tertiarySystemFill))
     }
 
     private func sectionHeader(_ title: String) -> some View {
-        Text(title)
+        Text(title.uppercased())
             .font(.system(size: 12, weight: .bold))
             .foregroundColor(NooberTheme.accent)
-            .textCase(.uppercase)
             .padding(.horizontal, 16)
     }
 
@@ -164,6 +158,6 @@ struct RewriteRuleEditView: View {
             )
             store.addRewriteRule(rule)
         }
-        dismiss()
+        presentationMode.wrappedValue.dismiss()
     }
 }

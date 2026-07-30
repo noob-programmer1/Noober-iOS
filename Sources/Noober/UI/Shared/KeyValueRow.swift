@@ -13,7 +13,7 @@ struct KeyValueRow: View {
             Text(value)
                 .font(.system(size: 12, design: .monospaced))
                 .foregroundColor(.primary)
-                .textSelection(.enabled)
+                .nooberTextSelection()
         }
         .padding(.vertical, 6)
     }
@@ -27,7 +27,7 @@ struct HeadersView: View {
             VStack(spacing: 8) {
                 Image(systemName: "tray")
                     .font(.system(size: 28))
-                    .foregroundColor(Color(uiColor: .quaternaryLabel))
+                    .foregroundColor(Color(.quaternaryLabel))
                 Text("No headers")
                     .font(.system(size: 14))
                     .foregroundColor(.secondary)
@@ -35,7 +35,7 @@ struct HeadersView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 40)
         } else {
-            LazyVStack(alignment: .leading, spacing: 0) {
+            NooberLazyVStack(alignment: .leading, spacing: 0) {
                 ForEach(headers.sorted(by: { $0.key < $1.key }), id: \.key) { key, value in
                     KeyValueRow(key: key, value: value)
                         .padding(.horizontal, 16)

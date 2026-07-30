@@ -5,7 +5,7 @@ struct MockRuleEditView: View {
     @ObservedObject var store: RulesStore
     let existingRule: MockRule?
     let prefillFromRequest: NetworkRequestModel?
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.presentationMode) private var presentationMode
 
     @State private var name = ""
     @State private var matchMode: URLMatchMode = .contains
@@ -71,7 +71,7 @@ struct MockRuleEditView: View {
                     TextField("/api/users", text: $pattern)
                         .font(.system(size: 13, design: .monospaced))
                         .textFieldStyle(.plain)
-                        .textInputAutocapitalization(.never)
+                        .autocapitalization(.none)
                         .disableAutocorrection(true)
                         .padding(10)
                         .background(fieldBackground)
@@ -128,21 +128,21 @@ struct MockRuleEditView: View {
                             HStack(spacing: 8) {
                                 TextField("Key", text: $headers[index].key)
                                     .font(.system(size: 12, design: .monospaced))
-                                    .textInputAutocapitalization(.never)
+                                    .autocapitalization(.none)
                                     .disableAutocorrection(true)
                                     .padding(8)
                                     .background(
                                         RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                            .fill(Color(uiColor: .tertiarySystemFill))
+                                            .fill(Color(.tertiarySystemFill))
                                     )
                                 TextField("Value", text: $headers[index].value)
                                     .font(.system(size: 12, design: .monospaced))
-                                    .textInputAutocapitalization(.never)
+                                    .autocapitalization(.none)
                                     .disableAutocorrection(true)
                                     .padding(8)
                                     .background(
                                         RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                            .fill(Color(uiColor: .tertiarySystemFill))
+                                            .fill(Color(.tertiarySystemFill))
                                     )
                                 Button {
                                     headers.remove(at: index)
@@ -171,11 +171,11 @@ struct MockRuleEditView: View {
                         if bodyText.isEmpty {
                             Text("{\"message\": \"mocked\"}")
                                 .font(.system(size: 13, design: .monospaced))
-                                .foregroundColor(Color(uiColor: .placeholderText))
+                                .foregroundColor(Color(.placeholderText))
                                 .padding(.top, 12)
                                 .padding(.leading, 14)
                         }
-                        TextEditor(text: $bodyText)
+                        NooberTextEditor(text: $bodyText)
                             .font(.system(size: 13, design: .monospaced))
                             .frame(minHeight: 120)
                             .padding(4)
@@ -196,22 +196,17 @@ struct MockRuleEditView: View {
                 }
                 .padding(.top, 8)
             }
-            .background(Color(uiColor: .systemGroupedBackground))
-            .navigationTitle(existingRule != nil ? "Edit Mock" : "New Mock Rule")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
-                        .foregroundColor(.secondary)
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") { save() }
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(NooberTheme.accent)
-                        .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty
-                                  || pattern.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
-            }
+            .background(Color(.systemGroupedBackground))
+            .nooberNavigationBarTitle(existingRule != nil ? "Edit Mock" : "New Mock Rule")
+            .navigationBarItems(
+                leading: Button("Cancel") { presentationMode.wrappedValue.dismiss() }
+                    .foregroundColor(.secondary),
+                trailing: Button("Save") { save() }
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(NooberTheme.accent)
+                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty
+                              || pattern.trimmingCharacters(in: .whitespaces).isEmpty)
+            )
             .onAppear { prefill() }
         }
     }
@@ -220,14 +215,13 @@ struct MockRuleEditView: View {
 
     private var fieldBackground: some View {
         RoundedRectangle(cornerRadius: 8, style: .continuous)
-            .fill(Color(uiColor: .tertiarySystemFill))
+            .fill(Color(.tertiarySystemFill))
     }
 
     private func sectionHeader(_ title: String) -> some View {
-        Text(title)
+        Text(title.uppercased())
             .font(.system(size: 12, weight: .bold))
             .foregroundColor(NooberTheme.accent)
-            .textCase(.uppercase)
             .padding(.horizontal, 16)
     }
 
@@ -297,6 +291,6 @@ struct MockRuleEditView: View {
             )
             store.addMockRule(rule)
         }
-        dismiss()
+        presentationMode.wrappedValue.dismiss()
     }
 }

@@ -39,24 +39,23 @@ struct DeepLinkTesterView: View {
                 Image(systemName: "link")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.secondary)
-                TextField("Enter deep link URL...", text: $urlText)
+                TextField("Enter deep link URL...", text: $urlText, onCommit: { fire() })
                     .font(.system(size: 15))
                     .textFieldStyle(.plain)
-                    .textInputAutocapitalization(.never)
+                    .autocapitalization(.none)
                     .disableAutocorrection(true)
                     .keyboardType(.URL)
-                    .onSubmit { fire() }
                 if !urlText.isEmpty {
                     Button { urlText = "" } label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 15))
-                            .foregroundColor(Color(uiColor: .tertiaryLabel))
+                            .foregroundColor(Color(.tertiaryLabel))
                     }
                 }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 9)
-            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color(uiColor: .tertiarySystemFill)))
+            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color(.tertiarySystemFill)))
 
             Button { fire() } label: {
                 Text("Fire")
@@ -83,25 +82,28 @@ struct DeepLinkTesterView: View {
                         DeepLinkRow(entry: entry, formatter: Self.dateTimeFormatter) {
                             reFire(entry)
                         }
-                        .swipeActions(edge: .trailing) {
-                            Button(role: .destructive) {
-                                NooberTheme.hapticMedium()
-                                withAnimation { store.deleteEntry(id: entry.id) }
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
+                        .nooberSwipeAction(edge: .trailing, isDestructive: true, label: "Delete", systemImage: "trash") {
+                            NooberTheme.hapticMedium()
+                            withAnimation { store.deleteEntry(id: entry.id) }
                         }
-                        .swipeActions(edge: .leading) {
+                        .nooberSwipeAction(edge: .leading, tint: NooberTheme.warning, label: "Unfavorite", systemImage: "star.slash") {
+                            NooberTheme.hapticLight()
+                            withAnimation { store.toggleFavorite(id: entry.id) }
+                        }
+                        .contextMenu {
                             Button {
                                 NooberTheme.hapticLight()
                                 withAnimation { store.toggleFavorite(id: entry.id) }
                             } label: {
-                                Label("Unfavorite", systemImage: "star.slash")
+                                NooberLabel("Unfavorite", systemImage: "star.slash")
                             }
-                            .tint(NooberTheme.warning)
+                            NooberDestructiveButton("Delete", systemImage: "trash") {
+                                NooberTheme.hapticMedium()
+                                withAnimation { store.deleteEntry(id: entry.id) }
+                            }
                         }
                         .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 16))
-                        .listRowSeparator(.hidden)
+                        .nooberHideRowSeparator()
                     }
                 } header: {
                     HStack {
@@ -122,26 +124,33 @@ struct DeepLinkTesterView: View {
                         DeepLinkRow(entry: entry, formatter: Self.timeFormatter) {
                             reFire(entry)
                         }
-                        .swipeActions(edge: .trailing) {
-                            Button(role: .destructive) {
-                                NooberTheme.hapticMedium()
-                                withAnimation { store.deleteEntry(id: entry.id) }
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
+                        .nooberSwipeAction(edge: .trailing, isDestructive: true, label: "Delete", systemImage: "trash") {
+                            NooberTheme.hapticMedium()
+                            withAnimation { store.deleteEntry(id: entry.id) }
                         }
-                        .swipeActions(edge: .leading) {
+                        .nooberSwipeAction(
+                            edge: .leading, tint: NooberTheme.warning,
+                            label: entry.isFavorite ? "Unfavorite" : "Favorite",
+                            systemImage: entry.isFavorite ? "star.slash" : "star.fill"
+                        ) {
+                            NooberTheme.hapticLight()
+                            withAnimation { store.toggleFavorite(id: entry.id) }
+                        }
+                        .contextMenu {
                             Button {
                                 NooberTheme.hapticLight()
                                 withAnimation { store.toggleFavorite(id: entry.id) }
                             } label: {
-                                Label(entry.isFavorite ? "Unfavorite" : "Favorite",
+                                NooberLabel(entry.isFavorite ? "Unfavorite" : "Favorite",
                                       systemImage: entry.isFavorite ? "star.slash" : "star.fill")
                             }
-                            .tint(NooberTheme.warning)
+                            NooberDestructiveButton("Delete", systemImage: "trash") {
+                                NooberTheme.hapticMedium()
+                                withAnimation { store.deleteEntry(id: entry.id) }
+                            }
                         }
                         .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 16))
-                        .listRowSeparator(.hidden)
+                        .nooberHideRowSeparator()
                     }
                 } header: {
                     HStack {
@@ -173,15 +182,15 @@ struct DeepLinkTesterView: View {
         VStack(spacing: 16) {
             Spacer()
             ZStack {
-                Circle().fill(Color(uiColor: .tertiarySystemFill)).frame(width: 80, height: 80)
+                Circle().fill(Color(.tertiarySystemFill)).frame(width: 80, height: 80)
                 Image(systemName: "link.badge.plus")
                     .font(.system(size: 32, weight: .thin))
-                    .foregroundColor(Color(uiColor: .tertiaryLabel))
+                    .foregroundColor(Color(.tertiaryLabel))
             }
             Text("No Deep Links")
                 .font(.system(size: 17, weight: .semibold)).foregroundColor(.secondary)
             Text("Enter a URL scheme or universal link\nand tap Fire to test it.")
-                .font(.system(size: 14)).foregroundColor(Color(uiColor: .tertiaryLabel)).multilineTextAlignment(.center)
+                .font(.system(size: 14)).foregroundColor(Color(.tertiaryLabel)).multilineTextAlignment(.center)
             Spacer()
         }
         .frame(maxWidth: .infinity)
@@ -230,7 +239,7 @@ private struct DeepLinkRow: View {
                             Spacer()
                             Text(formatter.string(from: entry.timestamp))
                                 .font(.system(size: 10, design: .monospaced))
-                                .foregroundColor(Color(uiColor: .tertiaryLabel))
+                                .foregroundColor(Color(.tertiaryLabel))
                         }
                         Text(entry.url)
                             .font(.system(size: 13, weight: .medium, design: .monospaced))
@@ -244,14 +253,14 @@ private struct DeepLinkRow: View {
             .padding(.leading, 16)
         }
         .buttonStyle(.plain)
-        .overlay(alignment: .bottom) { Divider().padding(.leading, 30) }
+        .overlay(Divider().padding(.leading, 30), alignment: .bottom)
     }
 
     private var resultColor: Color {
         switch entry.lastResult {
         case .opened: return NooberTheme.success
         case .failed:  return NooberTheme.error
-        case .none:    return Color(uiColor: .tertiaryLabel)
+        case .none:    return Color(.tertiaryLabel)
         }
     }
 
@@ -263,7 +272,7 @@ private struct DeepLinkRow: View {
         case .failed:
             TypeBadge(text: "FAILED", color: NooberTheme.error)
         case .none:
-            TypeBadge(text: "PENDING", color: Color(uiColor: .tertiaryLabel))
+            TypeBadge(text: "PENDING", color: Color(.tertiaryLabel))
         }
     }
 }

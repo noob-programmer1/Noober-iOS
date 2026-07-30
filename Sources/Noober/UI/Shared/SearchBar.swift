@@ -15,7 +15,7 @@ struct NooberSearchBar: View {
             TextField(placeholder, text: $text)
                 .font(.system(size: 15))
                 .textFieldStyle(.plain)
-                .textInputAutocapitalization(.never)
+                .autocapitalization(.none)
                 .disableAutocorrection(true)
 
             if !text.isEmpty {
@@ -25,7 +25,7 @@ struct NooberSearchBar: View {
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 15))
-                        .foregroundColor(Color(uiColor: .tertiaryLabel))
+                        .foregroundColor(Color(.tertiaryLabel))
                 }
                 .transition(.scale.combined(with: .opacity))
             }
@@ -34,7 +34,7 @@ struct NooberSearchBar: View {
         .padding(.vertical, 9)
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Color(uiColor: .tertiarySystemFill))
+                .fill(Color(.tertiarySystemFill))
         )
         .animation(.easeInOut(duration: 0.15), value: text.isEmpty)
     }

@@ -4,7 +4,7 @@ import Combine
 struct InterceptReviewView: View {
 
     let intercept: PendingIntercept
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.presentationMode) private var presentationMode
 
     @State private var url: String = ""
     @State private var method: String = "GET"
@@ -54,7 +54,7 @@ struct InterceptReviewView: View {
                         TextField("https://...", text: $url)
                             .font(.system(size: 13, design: .monospaced))
                             .textFieldStyle(.plain)
-                            .textInputAutocapitalization(.never)
+                            .autocapitalization(.none)
                             .disableAutocorrection(true)
                             .padding(10)
                             .background(fieldBackground)
@@ -67,21 +67,21 @@ struct InterceptReviewView: View {
                                 HStack(spacing: 8) {
                                     TextField("Key", text: $headers[index].key)
                                         .font(.system(size: 12, design: .monospaced))
-                                        .textInputAutocapitalization(.never)
+                                        .autocapitalization(.none)
                                         .disableAutocorrection(true)
                                         .padding(8)
                                         .background(
                                             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                                .fill(Color(uiColor: .tertiarySystemFill))
+                                                .fill(Color(.tertiarySystemFill))
                                         )
                                     TextField("Value", text: $headers[index].value)
                                         .font(.system(size: 12, design: .monospaced))
-                                        .textInputAutocapitalization(.never)
+                                        .autocapitalization(.none)
                                         .disableAutocorrection(true)
                                         .padding(8)
                                         .background(
                                             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                                .fill(Color(uiColor: .tertiarySystemFill))
+                                                .fill(Color(.tertiarySystemFill))
                                         )
                                     Button {
                                         headers.remove(at: index)
@@ -111,11 +111,11 @@ struct InterceptReviewView: View {
                                 if bodyText.isEmpty {
                                     Text("Request body...")
                                         .font(.system(size: 13, design: .monospaced))
-                                        .foregroundColor(Color(uiColor: .placeholderText))
+                                        .foregroundColor(Color(.placeholderText))
                                         .padding(.top, 12)
                                         .padding(.leading, 14)
                                 }
-                                TextEditor(text: $bodyText)
+                                NooberTextEditor(text: $bodyText)
                                     .font(.system(size: 13, design: .monospaced))
                                     .frame(minHeight: 100)
                                     .padding(4)
@@ -132,18 +132,15 @@ struct InterceptReviewView: View {
                 // Action bar
                 actionBar
             }
-            .background(Color(uiColor: .systemGroupedBackground))
-            .navigationTitle("Intercepted Request")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Drop") {
-                        InterceptManager.cancel(id: intercept.id)
-                        dismiss()
-                    }
-                    .foregroundColor(NooberTheme.error)
+            .background(Color(.systemGroupedBackground))
+            .nooberNavigationBarTitle("Intercepted Request")
+            .navigationBarItems(
+                leading: Button("Drop") {
+                    InterceptManager.cancel(id: intercept.id)
+                    presentationMode.wrappedValue.dismiss()
                 }
-            }
+                .foregroundColor(NooberTheme.error)
+            )
             .onAppear {
                 url = intercept.url
                 method = intercept.method
@@ -159,7 +156,7 @@ struct InterceptReviewView: View {
             .onReceive(timer) { _ in
                 remainingSeconds = max(0, Int(intercept.autoTimeoutDate.timeIntervalSince(Date())))
                 if remainingSeconds <= 0 {
-                    dismiss()
+                    presentationMode.wrappedValue.dismiss()
                 }
             }
         }
@@ -195,7 +192,7 @@ struct InterceptReviewView: View {
         HStack(spacing: 12) {
             Button {
                 InterceptManager.cancel(id: intercept.id)
-                dismiss()
+                presentationMode.wrappedValue.dismiss()
             } label: {
                 Text("Cancel Request")
                     .font(.system(size: 14, weight: .semibold))
@@ -218,21 +215,20 @@ struct InterceptReviewView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color(.secondarySystemBackground))
     }
 
     // MARK: - Helpers
 
     private var fieldBackground: some View {
         RoundedRectangle(cornerRadius: 8, style: .continuous)
-            .fill(Color(uiColor: .tertiarySystemFill))
+            .fill(Color(.tertiarySystemFill))
     }
 
     private func sectionHeader(_ title: String) -> some View {
-        Text(title)
+        Text(title.uppercased())
             .font(.system(size: 12, weight: .bold))
             .foregroundColor(NooberTheme.accent)
-            .textCase(.uppercase)
             .padding(.horizontal, 16)
     }
 
@@ -249,6 +245,6 @@ struct InterceptReviewView: View {
             headers: headerDict,
             body: bodyData
         )
-        dismiss()
+        presentationMode.wrappedValue.dismiss()
     }
 }

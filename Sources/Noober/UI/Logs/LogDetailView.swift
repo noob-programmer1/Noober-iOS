@@ -22,7 +22,7 @@ struct LogDetailView: View {
                     Text(entry.message)
                         .font(.system(size: 14, design: .monospaced))
                         .foregroundColor(.primary)
-                        .textSelection(.enabled)
+                        .nooberTextSelection()
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
@@ -37,23 +37,20 @@ struct LogDetailView: View {
             }
             .padding(16)
         }
-        .background(Color(uiColor: .systemGroupedBackground))
-        .navigationTitle(entry.level.rawValue)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    UIPasteboard.general.string = entry.message
-                    NooberTheme.hapticSuccess()
-                    copiedField = "message"
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { copiedField = nil }
-                } label: {
-                    Image(systemName: copiedField == "message" ? "checkmark" : "doc.on.doc")
-                        .font(.system(size: 16))
-                        .foregroundColor(copiedField == "message" ? NooberTheme.success : NooberTheme.accent)
-                }
+        .background(Color(.systemGroupedBackground))
+        .nooberNavigationBarTitle(entry.level.rawValue)
+        .navigationBarItems(
+            trailing: Button {
+                UIPasteboard.general.string = entry.message
+                NooberTheme.hapticSuccess()
+                copiedField = "message"
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { copiedField = nil }
+            } label: {
+                Image(systemName: copiedField == "message" ? "checkmark" : "doc.on.doc")
+                    .font(.system(size: 16))
+                    .foregroundColor(copiedField == "message" ? NooberTheme.success : NooberTheme.accent)
             }
-        }
+        )
     }
 
     // MARK: - Header
@@ -72,7 +69,7 @@ struct LogDetailView: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color(uiColor: .secondarySystemBackground))
+                .fill(Color(.secondarySystemBackground))
         )
     }
 
@@ -80,10 +77,9 @@ struct LogDetailView: View {
 
     private func detailSection<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title)
+            Text(title.uppercased())
                 .font(.system(size: 12, weight: .bold))
                 .foregroundColor(NooberTheme.accent)
-                .textCase(.uppercase)
                 .padding(.horizontal, 4)
             VStack(alignment: .leading, spacing: 0) {
                 content()
@@ -92,7 +88,7 @@ struct LogDetailView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color(uiColor: .secondarySystemBackground))
+                    .fill(Color(.secondarySystemBackground))
             )
         }
     }
@@ -106,7 +102,7 @@ struct LogDetailView: View {
             Text(value)
                 .font(.system(size: 13, design: .monospaced))
                 .foregroundColor(.primary)
-                .textSelection(.enabled)
+                .nooberTextSelection()
         }
         .padding(.vertical, 4)
     }

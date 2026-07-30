@@ -2,7 +2,7 @@ import SwiftUI
 
 /// AI Flows tab — record navigation flows for NoobQA to replay.
 struct AIFlowsView: View {
-    @StateObject private var recorder = FlowRecorder.shared
+    @ObservedObject private var recorder = FlowRecorder.shared
     @State private var flowName = ""
     @State private var flowDescription = ""
     @State private var showNameForm = false
@@ -179,7 +179,7 @@ struct AIFlowsView: View {
 
     private var flowsList: some View {
         ScrollView {
-            LazyVStack(spacing: 0) {
+            NooberLazyVStack(spacing: 0) {
                 ForEach(recorder.savedFlows) { flow in
                     flowCard(flow)
                 }
@@ -215,7 +215,7 @@ struct AIFlowsView: View {
                             .font(.system(size: 13, weight: .semibold))
                             .lineLimit(1)
                         HStack(spacing: 6) {
-                            Label("\(flow.steps.count)", systemImage: "arrow.turn.down.right")
+                            NooberLabel("\(flow.steps.count)", systemImage: "arrow.turn.down.right")
                                 .font(.system(size: 10, weight: .medium))
                                 .foregroundColor(.purple)
                             if !flow.description.isEmpty {
@@ -268,7 +268,7 @@ struct AIFlowsView: View {
                     // Recorded date
                     HStack(spacing: 4) {
                         Image(systemName: "clock").font(.system(size: 9))
-                        Text(flow.recordedAt, style: .relative)
+                        NooberRelativeText(flow.recordedAt)
                             .font(.system(size: 9))
                         Text("ago").font(.system(size: 9))
                     }
@@ -281,7 +281,7 @@ struct AIFlowsView: View {
                             recorder.deleteFlow(id: flow.id)
                             expandedFlowId = nil
                         } label: {
-                            Label("Delete", systemImage: "trash")
+                            NooberLabel("Delete", systemImage: "trash")
                                 .font(.system(size: 11))
                                 .foregroundColor(.red.opacity(0.7))
                         }
@@ -320,7 +320,7 @@ struct AIFlowsView: View {
                         .foregroundColor(.purple)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 3)
-                        .background(Color.purple.opacity(0.08), in: RoundedRectangle(cornerRadius: 4))
+                        .background(RoundedRectangle(cornerRadius: 4).fill(Color.purple.opacity(0.08)))
                 }
             }
         }
@@ -343,7 +343,7 @@ struct AIFlowsView: View {
                     .foregroundColor(.purple)
                     .padding(.horizontal, 4)
                     .padding(.vertical, 1)
-                    .background(Color.purple.opacity(0.1), in: RoundedRectangle(cornerRadius: 3))
+                    .background(RoundedRectangle(cornerRadius: 3).fill(Color.purple.opacity(0.1)))
 
                 // Label or coordinates
                 if let label = step.label {
@@ -417,7 +417,7 @@ struct ImportFlowView: View {
     let recorder: FlowRecorder
     @Binding var message: String
     @State private var jsonText = ""
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.presentationMode) private var presentationMode
 
     var body: some View {
         VStack(spacing: 16) {
@@ -428,7 +428,7 @@ struct ImportFlowView: View {
                 .font(.system(size: 13))
                 .foregroundColor(.secondary)
 
-            TextEditor(text: $jsonText)
+            NooberTextEditor(text: $jsonText)
                 .font(.system(size: 11, design: .monospaced))
                 .frame(minHeight: 150)
                 .padding(4)
@@ -442,14 +442,14 @@ struct ImportFlowView: View {
 
                 Spacer()
 
-                Button("Cancel") { dismiss() }
+                Button("Cancel") { presentationMode.wrappedValue.dismiss() }
                     .font(.system(size: 13))
 
                 Button("Import") {
                     guard let data = jsonText.data(using: .utf8) else { return }
                     let count = recorder.importFlows(from: data)
                     message = count > 0 ? "✅ Imported \(count) new flow(s)" : "No new flows to import"
-                    dismiss()
+                    presentationMode.wrappedValue.dismiss()
                 }
                 .font(.system(size: 13, weight: .bold))
                 .disabled(jsonText.isEmpty)

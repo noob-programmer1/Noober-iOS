@@ -123,7 +123,7 @@ struct NetworkListView: View {
                 TextField("Search URL, method, host...", text: $searchText)
                     .font(.system(size: 15))
                     .textFieldStyle(.plain)
-                    .textInputAutocapitalization(.never)
+                    .autocapitalization(.none)
                     .disableAutocorrection(true)
                 if !searchText.isEmpty {
                     Button {
@@ -132,13 +132,13 @@ struct NetworkListView: View {
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 15))
-                            .foregroundColor(Color(uiColor: .tertiaryLabel))
+                            .foregroundColor(Color(.tertiaryLabel))
                     }
                 }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 9)
-            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color(uiColor: .tertiarySystemFill)))
+            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color(.tertiarySystemFill)))
 
             // Filter button
             Button { showFilterSheet = true } label: {
@@ -254,7 +254,7 @@ struct NetworkListView: View {
                 }
 
                 // Separator
-                Rectangle().fill(Color(uiColor: .separator)).frame(width: 1, height: 20)
+                Rectangle().fill(Color(.separator)).frame(width: 1, height: 20)
 
                 // Status chips (only relevant for HTTP)
                 ForEach(NetworkRequestModel.StatusCodeCategory.allCases, id: \.self) { cat in
@@ -269,7 +269,7 @@ struct NetworkListView: View {
 
                 // Screen chips (group toggle + per-screen filters)
                 if !store.uniqueScreenNames.isEmpty {
-                    Rectangle().fill(Color(uiColor: .separator)).frame(width: 1, height: 20)
+                    Rectangle().fill(Color(.separator)).frame(width: 1, height: 20)
 
                     FilterChip(
                         title: groupByScreen ? "Grouped" : "Group by Screen",
@@ -305,13 +305,13 @@ struct NetworkListView: View {
                             }
                             .contextMenu { httpContextMenu(req) }
                             .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 16))
-                            .listRowSeparator(.hidden)
+                            .nooberHideRowSeparator()
                         case .webSocket(let conn):
                             NavigationLink(destination: WebSocketDetailPlaceholder(connection: conn)) {
                                 WebSocketRowView(connection: conn)
                             }
                             .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 16))
-                            .listRowSeparator(.hidden)
+                            .nooberHideRowSeparator()
                         }
                     }
                 } header: {
@@ -349,24 +349,24 @@ struct NetworkListView: View {
     @ViewBuilder
     private func httpContextMenu(_ req: NetworkRequestModel) -> some View {
         Button { replayingRequest = req } label: {
-            Label("Replay...", systemImage: "arrow.clockwise")
+            NooberLabel("Replay...", systemImage: "arrow.clockwise")
         }
         Button { RequestReplayer.replay(from: req) } label: {
-            Label("Quick Replay", systemImage: "paperplane")
+            NooberLabel("Quick Replay", systemImage: "paperplane")
         }
         Divider()
         Button { createMockRequest = req } label: {
-            Label("Create Mock", systemImage: "wand.and.rays")
+            NooberLabel("Create Mock", systemImage: "wand.and.rays")
         }
         Button { createInterceptRequest = req } label: {
-            Label("Create Intercept", systemImage: "hand.raised")
+            NooberLabel("Create Intercept", systemImage: "hand.raised")
         }
         Divider()
         Button {
             UIPasteboard.general.string = CURLGenerator.generate(from: req)
             NooberTheme.hapticSuccess()
         } label: {
-            Label("Copy cURL", systemImage: "terminal")
+            NooberLabel("Copy cURL", systemImage: "terminal")
         }
     }
 
@@ -386,7 +386,7 @@ struct NetworkListView: View {
 
             if store.activeRequestCount > 0 {
                 HStack(spacing: 5) {
-                    ProgressView().scaleEffect(0.65)
+                    NooberProgressView().scaleEffect(0.65)
                     Text("\(store.activeRequestCount)")
                         .font(.system(size: 12, weight: .bold, design: .rounded))
                         .foregroundColor(NooberTheme.accent)
@@ -396,10 +396,10 @@ struct NetworkListView: View {
 
             Text("\(filteredEntries.count) shown")
                 .font(.system(size: 11))
-                .foregroundColor(Color(uiColor: .tertiaryLabel))
+                .foregroundColor(Color(.tertiaryLabel))
         }
         .padding(.horizontal, 16).padding(.vertical, 8)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color(.secondarySystemBackground))
     }
 
     private func statsItem(count: Int, label: String, color: Color) -> some View {
@@ -411,7 +411,7 @@ struct NetworkListView: View {
     }
 
     private var statsItemDivider: some View {
-        Rectangle().fill(Color(uiColor: .separator)).frame(width: 1, height: 22).padding(.horizontal, 6)
+        Rectangle().fill(Color(.separator)).frame(width: 1, height: 22).padding(.horizontal, 6)
     }
 
     // MARK: - Entry List
@@ -426,14 +426,14 @@ struct NetworkListView: View {
                     }
                     .contextMenu { httpContextMenu(req) }
                     .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 16))
-                    .listRowSeparator(.hidden)
+                    .nooberHideRowSeparator()
 
                 case .webSocket(let conn):
                     NavigationLink(destination: WebSocketDetailPlaceholder(connection: conn)) {
                         WebSocketRowView(connection: conn)
                     }
                     .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 16))
-                    .listRowSeparator(.hidden)
+                    .nooberHideRowSeparator()
                 }
             }
         }
@@ -455,18 +455,18 @@ struct NetworkListView: View {
         VStack(spacing: 16) {
             Spacer()
             ZStack {
-                Circle().fill(Color(uiColor: .tertiarySystemFill)).frame(width: 80, height: 80)
+                Circle().fill(Color(.tertiarySystemFill)).frame(width: 80, height: 80)
                 Image(systemName: store.requests.isEmpty && store.webSocketConnections.isEmpty
                     ? "antenna.radiowaves.left.and.right.slash" : "line.3.horizontal.decrease")
                     .font(.system(size: 32, weight: .thin))
-                    .foregroundColor(Color(uiColor: .tertiaryLabel))
+                    .foregroundColor(Color(.tertiaryLabel))
             }
             Text(store.requests.isEmpty && store.webSocketConnections.isEmpty ? "No traffic yet" : "No matching entries")
                 .font(.system(size: 17, weight: .semibold)).foregroundColor(.secondary)
             Text(store.requests.isEmpty && store.webSocketConnections.isEmpty
                 ? "Network requests and WebSocket\nconnections will appear here."
                 : "Try adjusting your search or filters.")
-                .font(.system(size: 14)).foregroundColor(Color(uiColor: .tertiaryLabel)).multilineTextAlignment(.center)
+                .font(.system(size: 14)).foregroundColor(Color(.tertiaryLabel)).multilineTextAlignment(.center)
             if activeFilterCount > 0 {
                 Button {
                     withAnimation {
@@ -515,7 +515,7 @@ private struct HTTPRowView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                         .overlay(
                             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .stroke(Color(uiColor: .separator), lineWidth: 0.5)
+                                .stroke(Color(.separator), lineWidth: 0.5)
                         )
                 }
 
@@ -565,14 +565,14 @@ private struct HTTPRowView: View {
                         Text(Self.timeFormatter.string(from: request.timestamp))
                     }
                     .font(.system(size: 10))
-                    .foregroundColor(Color(uiColor: .tertiaryLabel))
+                    .foregroundColor(Color(.tertiaryLabel))
                 }
             }
             .padding(.leading, 10)
             .padding(.vertical, 8)
         }
         .padding(.leading, 16)
-        .overlay(alignment: .bottom) { Divider().padding(.leading, 30) }
+        .overlay(Divider().padding(.leading, 30), alignment: .bottom)
     }
 }
 
@@ -604,10 +604,10 @@ private struct WebSocketRowView: View {
                         .foregroundColor(NooberTheme.wsStatusColor(connection.status))
                     Spacer()
                     HStack(spacing: 8) {
-                        Label("\(connection.sentCount)", systemImage: "arrow.up")
+                        NooberLabel("\(connection.sentCount)", systemImage: "arrow.up")
                             .font(.system(size: 10, weight: .medium))
                             .foregroundColor(NooberTheme.warning)
-                        Label("\(connection.receivedCount)", systemImage: "arrow.down")
+                        NooberLabel("\(connection.receivedCount)", systemImage: "arrow.down")
                             .font(.system(size: 10, weight: .medium))
                             .foregroundColor(NooberTheme.info)
                     }
@@ -628,13 +628,13 @@ private struct WebSocketRowView: View {
                     Text(Self.timeFormatter.string(from: connection.lastActivityTime))
                 }
                 .font(.system(size: 10))
-                .foregroundColor(Color(uiColor: .tertiaryLabel))
+                .foregroundColor(Color(.tertiaryLabel))
             }
             .padding(.leading, 10)
             .padding(.vertical, 8)
         }
         .padding(.leading, 16)
-        .overlay(alignment: .bottom) { Divider().padding(.leading, 30) }
+        .overlay(Divider().padding(.leading, 30), alignment: .bottom)
     }
 }
 
@@ -661,10 +661,10 @@ struct WebSocketDetailPlaceholder: View {
                     Text(connection.url)
                         .font(.system(size: 12, design: .monospaced))
                         .foregroundColor(.primary.opacity(0.8))
-                        .textSelection(.enabled)
+                        .nooberTextSelection()
                 }
                 .padding(16)
-                .background(Color(uiColor: .secondarySystemBackground))
+                .background(Color(.secondarySystemBackground))
                 .cornerRadius(12)
 
                 // Frames list
@@ -674,19 +674,18 @@ struct WebSocketDetailPlaceholder: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 40)
                 } else {
-                    LazyVStack(spacing: 1) {
+                    NooberLazyVStack(spacing: 1) {
                         ForEach(connection.frames.reversed()) { frame in
                             wsFrameRow(frame)
                         }
                     }
-                    .background(Color(uiColor: .secondarySystemBackground))
+                    .background(Color(.secondarySystemBackground))
                     .cornerRadius(12)
                 }
             }
             .padding(16)
         }
-        .navigationTitle(connection.displayName)
-        .navigationBarTitleDisplayMode(.inline)
+        .nooberNavigationBarTitle(connection.displayName)
     }
 
     private func wsFrameRow(_ frame: WebSocketFrameModel) -> some View {
@@ -709,7 +708,7 @@ struct WebSocketDetailPlaceholder: View {
                     Spacer()
                     Text(frame.sizeText)
                         .font(.system(size: 10, design: .monospaced))
-                        .foregroundColor(Color(uiColor: .tertiaryLabel))
+                        .foregroundColor(Color(.tertiaryLabel))
                 }
 
                 Text(frame.payloadPreview)
@@ -720,6 +719,6 @@ struct WebSocketDetailPlaceholder: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(Color(uiColor: .systemBackground))
+        .background(Color(.systemBackground))
     }
 }
