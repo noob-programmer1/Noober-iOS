@@ -67,18 +67,15 @@ public enum ViewHierarchySnapshot {
 
     /// Walk the view hierarchy recursively
     private static func walkView(_ view: UIView, in window: UIWindow, into elements: inout [Element]) {
-        // Skip hidden views and Noober windows
         guard !view.isHidden, view.alpha > 0.01 else { return }
         if String(describing: type(of: view)).contains("Noober") { return }
 
         let frame = view.convert(view.bounds, to: window)
 
-        // Check if this view is an accessible element
         let label = view.accessibilityLabel
         let identifier = view.accessibilityIdentifier
         let isAccessible = view.isAccessibilityElement
 
-        // Determine type
         let typeName: String
         if view is UIButton { typeName = "Button" }
         else if view is UILabel { typeName = "Label" }
@@ -91,7 +88,6 @@ public enum ViewHierarchySnapshot {
         else if view is UICollectionViewCell { typeName = "Cell" }
         else { typeName = String(describing: type(of: view)).components(separatedBy: ".").last ?? "View" }
 
-        // Determine if interactive
         let isInteractive = view.isUserInteractionEnabled && (
             view is UIControl ||
             view.gestureRecognizers?.isEmpty == false ||

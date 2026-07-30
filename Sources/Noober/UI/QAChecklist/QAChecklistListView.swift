@@ -86,7 +86,6 @@ struct QAChecklistListView: View {
 
     private func checklistCard(_ result: QAChecklistResult) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            // Priority badge + title + status icon
             HStack(spacing: 8) {
                 if result.priority == .high {
                     priorityBadge("HIGH", color: NooberTheme.error)
@@ -104,7 +103,6 @@ struct QAChecklistListView: View {
                 statusIcon(result.status)
             }
 
-            // Dev notes
             if !result.notes.isEmpty {
                 Text(result.notes)
                     .font(.system(size: 13))
@@ -112,7 +110,6 @@ struct QAChecklistListView: View {
                     .lineLimit(3)
             }
 
-            // Endpoint tags
             if !result.endpoints.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 4) {
@@ -131,7 +128,6 @@ struct QAChecklistListView: View {
                 }
             }
 
-            // Fail notes (if failed)
             if result.status == .failed && !result.failNotes.isEmpty {
                 HStack(spacing: 6) {
                     Image(systemName: "exclamationmark.triangle.fill")
@@ -149,7 +145,6 @@ struct QAChecklistListView: View {
                 )
             }
 
-            // Attached requests count (if failed)
             if result.status == .failed && !result.attachedRequestIds.isEmpty {
                 HStack(spacing: 4) {
                     Image(systemName: "paperclip")
@@ -162,7 +157,6 @@ struct QAChecklistListView: View {
 
             Divider()
 
-            // Action buttons
             HStack(spacing: 12) {
                 if result.status == .pending {
                     actionButton("Pass", icon: "checkmark.circle.fill", color: NooberTheme.success) {

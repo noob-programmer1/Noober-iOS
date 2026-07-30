@@ -68,7 +68,6 @@ struct RulesTabContent: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Pending intercept banner
             if let first = pendingStore.pendingIntercepts.first {
                 interceptBanner(first)
             }

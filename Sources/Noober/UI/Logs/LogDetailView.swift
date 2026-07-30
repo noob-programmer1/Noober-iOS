@@ -14,10 +14,8 @@ struct LogDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
-                // Header
                 headerCard
 
-                // Message
                 detailSection("Message") {
                     Text(entry.message)
                         .font(.system(size: 14, design: .monospaced))
@@ -26,7 +24,6 @@ struct LogDetailView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
-                // Source
                 if !entry.file.isEmpty {
                     detailSection("Source") {
                         detailRow("File", (entry.file as NSString).lastPathComponent)

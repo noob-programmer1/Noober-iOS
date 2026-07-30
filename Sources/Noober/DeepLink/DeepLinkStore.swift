@@ -43,7 +43,6 @@ final class DeepLinkStore: ObservableObject {
     }
 
     func toggleFavorite(id: UUID) {
-        // Check history first
         if let index = history.firstIndex(where: { $0.id == id }) {
             history[index].isFavorite.toggle()
             if history[index].isFavorite {
@@ -54,7 +53,6 @@ final class DeepLinkStore: ObservableObject {
             save()
             return
         }
-        // Check favorites
         if let index = favorites.firstIndex(where: { $0.id == id }) {
             let entry = favorites[index]
             favorites.remove(at: index)

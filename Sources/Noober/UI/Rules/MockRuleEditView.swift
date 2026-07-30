@@ -31,7 +31,6 @@ struct MockRuleEditView: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    // Name
                     sectionHeader("Name")
                     TextField("e.g. Mock /api/users", text: $name)
                         .font(.system(size: 14))
@@ -40,7 +39,6 @@ struct MockRuleEditView: View {
                         .background(fieldBackground)
                         .padding(.horizontal, 16)
 
-                    // Match Mode
                     sectionHeader("Match Mode")
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
@@ -66,7 +64,6 @@ struct MockRuleEditView: View {
                         .padding(.horizontal, 16)
                     }
 
-                    // Pattern
                     sectionHeader("Match Pattern")
                     TextField("/api/users", text: $pattern)
                         .font(.system(size: 13, design: .monospaced))
@@ -77,7 +74,6 @@ struct MockRuleEditView: View {
                         .background(fieldBackground)
                         .padding(.horizontal, 16)
 
-                    // HTTP Method filter
                     HStack {
                         sectionHeader("Filter by Method")
                         Spacer()
@@ -111,7 +107,6 @@ struct MockRuleEditView: View {
                         }
                     }
 
-                    // Status Code
                     sectionHeader("Response Status Code")
                     TextField("200", text: $statusCode)
                         .font(.system(size: 14, design: .monospaced))
@@ -121,7 +116,6 @@ struct MockRuleEditView: View {
                         .background(fieldBackground)
                         .padding(.horizontal, 16)
 
-                    // Response Headers
                     sectionHeader("Response Headers (\(headers.count))")
                     VStack(spacing: 8) {
                         ForEach(Array(headers.enumerated()), id: \.offset) { index, _ in
@@ -165,7 +159,6 @@ struct MockRuleEditView: View {
                     }
                     .padding(.horizontal, 16)
 
-                    // Response Body
                     sectionHeader("Response Body")
                     ZStack(alignment: .topLeading) {
                         if bodyText.isEmpty {
@@ -183,7 +176,6 @@ struct MockRuleEditView: View {
                     .background(fieldBackground)
                     .padding(.horizontal, 16)
 
-                    // Enabled
                     HStack {
                         sectionHeader("Enabled")
                         Spacer()

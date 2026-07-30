@@ -127,11 +127,9 @@ final class CompanionFramer: NWProtocolFramerImplementation {
     }
 
     func handleOutput(framer: NWProtocolFramer.Instance, message: NWProtocolFramer.Message, messageLength: Int, isComplete: Bool) {
-        // Write the length prefix
         var length = UInt32(messageLength).bigEndian
         framer.writeOutput(data: Data(bytes: &length, count: 4))
 
-        // Write the message body
         do {
             try framer.writeOutputNoCopy(length: messageLength)
         } catch {

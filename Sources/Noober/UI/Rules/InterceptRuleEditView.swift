@@ -26,7 +26,6 @@ struct InterceptRuleEditView: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    // Name
                     sectionHeader("Name")
                     TextField("e.g. Intercept /api/users", text: $name)
                         .font(.system(size: 14))
@@ -35,7 +34,6 @@ struct InterceptRuleEditView: View {
                         .background(fieldBackground)
                         .padding(.horizontal, 16)
 
-                    // Match Mode
                     sectionHeader("Match Mode")
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
@@ -61,7 +59,6 @@ struct InterceptRuleEditView: View {
                         .padding(.horizontal, 16)
                     }
 
-                    // Pattern
                     sectionHeader("Match Pattern")
                     TextField("/api/users", text: $pattern)
                         .font(.system(size: 13, design: .monospaced))
@@ -72,7 +69,6 @@ struct InterceptRuleEditView: View {
                         .background(fieldBackground)
                         .padding(.horizontal, 16)
 
-                    // HTTP Method filter
                     HStack {
                         sectionHeader("Filter by Method")
                         Spacer()
@@ -106,7 +102,6 @@ struct InterceptRuleEditView: View {
                         }
                     }
 
-                    // Enabled
                     HStack {
                         sectionHeader("Enabled")
                         Spacer()

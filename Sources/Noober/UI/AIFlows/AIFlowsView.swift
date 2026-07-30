@@ -15,7 +15,6 @@ struct AIFlowsView: View {
         VStack(spacing: 0) {
             header
 
-            // Import status message
             if !importMessage.isEmpty {
                 Text(importMessage)
                     .font(.system(size: 11, weight: .medium))
@@ -48,7 +47,6 @@ struct AIFlowsView: View {
                     .font(.system(size: 16, weight: .bold))
                 Spacer()
 
-                // Import
                 Button { showImportPicker = true } label: {
                     Image(systemName: "square.and.arrow.down")
                         .font(.system(size: 12))
@@ -56,7 +54,6 @@ struct AIFlowsView: View {
                 }
                 .buttonStyle(.plain)
 
-                // Export
                 if !recorder.savedFlows.isEmpty {
                     Button { exportFlows() } label: {
                         Image(systemName: "square.and.arrow.up")
@@ -193,14 +190,12 @@ struct AIFlowsView: View {
         let isExpanded = expandedFlowId == flow.id
 
         return VStack(alignment: .leading, spacing: 0) {
-            // Header row
             Button {
                 withAnimation(.spring(response: 0.25)) {
                     expandedFlowId = isExpanded ? nil : flow.id
                 }
             } label: {
                 HStack(spacing: 10) {
-                    // Icon
                     ZStack {
                         RoundedRectangle(cornerRadius: 8).fill(Color.purple.opacity(0.1))
                             .frame(width: 36, height: 36)
@@ -209,7 +204,6 @@ struct AIFlowsView: View {
                             .foregroundColor(.purple)
                     }
 
-                    // Info
                     VStack(alignment: .leading, spacing: 2) {
                         Text(flow.name)
                             .font(.system(size: 13, weight: .semibold))
@@ -230,7 +224,6 @@ struct AIFlowsView: View {
 
                     Spacer()
 
-                    // Expand arrow
                     Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundColor(.gray.opacity(0.4))
@@ -240,13 +233,10 @@ struct AIFlowsView: View {
             .buttonStyle(.plain)
             .padding(.vertical, 10)
 
-            // Expanded detail
             if isExpanded {
                 VStack(alignment: .leading, spacing: 6) {
-                    // Screen path
                     screenPath(flow)
 
-                    // Steps
                     VStack(alignment: .leading, spacing: 3) {
                         Text("STEPS").font(.system(size: 9, weight: .bold)).foregroundColor(.secondary)
                         ForEach(Array(flow.steps.enumerated()), id: \.offset) { i, step in
@@ -254,7 +244,6 @@ struct AIFlowsView: View {
                         }
                     }
 
-                    // Device info
                     if let device = flow.device {
                         HStack(spacing: 4) {
                             Image(systemName: "iphone").font(.system(size: 9))
@@ -265,7 +254,6 @@ struct AIFlowsView: View {
                         .padding(.top, 2)
                     }
 
-                    // Recorded date
                     HStack(spacing: 4) {
                         Image(systemName: "clock").font(.system(size: 9))
                         NooberRelativeText(flow.recordedAt)
@@ -274,7 +262,6 @@ struct AIFlowsView: View {
                     }
                     .foregroundColor(.gray.opacity(0.4))
 
-                    // Actions
                     HStack {
                         Spacer()
                         Button {
@@ -337,7 +324,6 @@ struct AIFlowsView: View {
                 .background(Circle().fill(Color.purple.opacity(0.6)))
 
             HStack(spacing: 4) {
-                // Action badge
                 Text(step.action.rawValue)
                     .font(.system(size: 9, weight: .bold, design: .monospaced))
                     .foregroundColor(.purple)
@@ -345,7 +331,6 @@ struct AIFlowsView: View {
                     .padding(.vertical, 1)
                     .background(RoundedRectangle(cornerRadius: 3).fill(Color.purple.opacity(0.1)))
 
-                // Label or coordinates
                 if let label = step.label {
                     Text("\"\(label)\"")
                         .font(.system(size: 10))
@@ -365,7 +350,6 @@ struct AIFlowsView: View {
 
                 Spacer()
 
-                // Screen name
                 Text(step.screen.isEmpty ? "" : step.screen)
                     .font(.system(size: 8))
                     .foregroundColor(.gray.opacity(0.4))

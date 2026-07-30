@@ -10,15 +10,12 @@ enum TouchSynthesizer {
     static func tap(at point: CGPoint) {
         guard let window = targetWindow(for: point) else { return }
 
-        // Find the view at this point for hitTest
         let hitView = window.hitTest(point, with: nil) ?? window
 
-        // Simulate tap via first responder chain
         // Use performSelector to avoid private API at compile time
         let sel = NSSelectorFromString("_firstResponder")
         _ = hitView
 
-        // Dispatch touch down + touch up using UIKit gesture
         let touch = syntheticTouch(at: point, in: window, phase: .began)
         let downEvent = syntheticEvent(with: touch)
         UIApplication.shared.sendEvent(downEvent)
@@ -65,20 +62,16 @@ enum TouchSynthesizer {
     // MARK: - Type Text
 
     static func typeText(_ text: String) {
-        // Insert text into the current first responder's text input
         guard let keyWindow = UIApplication.shared.connectedScenes
             .compactMap({ $0 as? UIWindowScene })
             .flatMap(\.windows)
             .first(where: { $0.isKeyWindow }) else { return }
 
-        // Try to find the first responder that accepts text input
         if let responder = findFirstResponder(in: keyWindow) {
             if let textInput = responder as? UITextInput {
-                // Insert at current selection
                 if let range = textInput.selectedTextRange {
                     textInput.replace(range, withText: text)
                 } else {
-                    // Fallback: insert at end
                     let end = textInput.endOfDocument
                     if let range = textInput.textRange(from: end, to: end) {
                         textInput.replace(range, withText: text)
@@ -125,7 +118,6 @@ enum TouchSynthesizer {
     }
 
     private static func syntheticEvent(with touch: UITouch) -> UIEvent {
-        // Create a UIEvent containing our synthetic touch
         let event = UIEvent()
         let touches = NSSet(object: touch)
         event.setValue(touches, forKey: "allTouches")

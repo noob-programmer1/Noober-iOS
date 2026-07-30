@@ -18,12 +18,10 @@ struct InterceptReviewView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                // Countdown banner
                 countdownBanner
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
-                        // Method
                         sectionHeader("Method")
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 8) {
@@ -49,7 +47,6 @@ struct InterceptReviewView: View {
                             .padding(.horizontal, 16)
                         }
 
-                        // URL
                         sectionHeader("URL")
                         TextField("https://...", text: $url)
                             .font(.system(size: 13, design: .monospaced))
@@ -60,7 +57,6 @@ struct InterceptReviewView: View {
                             .background(fieldBackground)
                             .padding(.horizontal, 16)
 
-                        // Headers
                         sectionHeader("Headers (\(headers.count))")
                         VStack(spacing: 8) {
                             ForEach(Array(headers.enumerated()), id: \.offset) { index, _ in
@@ -104,7 +100,6 @@ struct InterceptReviewView: View {
                         }
                         .padding(.horizontal, 16)
 
-                        // Body
                         if method != "GET" && method != "HEAD" {
                             sectionHeader("Body")
                             ZStack(alignment: .topLeading) {
@@ -129,7 +124,6 @@ struct InterceptReviewView: View {
                     .padding(.top, 8)
                 }
 
-                // Action bar
                 actionBar
             }
             .background(Color(.systemGroupedBackground))

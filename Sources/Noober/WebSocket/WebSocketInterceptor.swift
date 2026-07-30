@@ -214,7 +214,6 @@ final class WebSocketInterceptor: @unchecked Sendable {
                 payloadString: String(data: dataValue, encoding: .utf8)
             )
         }
-        // Fallback: try to convert description
         return WebSocketFrameModel(
             connectionId: connectionId,
             direction: direction,

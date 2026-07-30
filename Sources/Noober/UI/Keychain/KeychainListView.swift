@@ -16,12 +16,10 @@ struct KeychainListView: View {
     private var filtered: [KeychainEntry] {
         var result = store.entries
 
-        // Class filter
         if let classFilter = selectedClassFilter {
             result = result.filter { $0.itemClass == classFilter }
         }
 
-        // Search filter
         if !searchText.isEmpty {
             result = result.filter {
                 $0.account.localizedCaseInsensitiveContains(searchText) ||
@@ -43,13 +41,11 @@ struct KeychainListView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Search bar
             NooberSearchBar(text: $searchText, placeholder: "Search account, service...")
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
                 .padding(.bottom, 4)
 
-            // Filter chips
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     classFilterChip("All", count: store.entries.count, filter: nil)
@@ -256,7 +252,6 @@ private struct KeychainRowView: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            // Color strip
             RoundedRectangle(cornerRadius: 2)
                 .fill(NooberTheme.keychainClassColor(entry.itemClass))
                 .frame(width: 3, height: 44)

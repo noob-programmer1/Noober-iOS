@@ -85,13 +85,11 @@ private struct EnvironmentCard: View {
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: 12) {
-                // Active indicator
                 Image(systemName: isActive ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 22))
                     .foregroundColor(isActive ? NooberTheme.success : Color(.tertiaryLabel))
 
                 VStack(alignment: .leading, spacing: 4) {
-                    // Name + default badge
                     HStack(spacing: 6) {
                         Text(env.name)
                             .font(.system(size: 15, weight: .semibold))
@@ -118,7 +116,6 @@ private struct EnvironmentCard: View {
                         }
                     }
 
-                    // Base URLs
                     ForEach(env.baseURLs, id: \.self) { url in
                         Text(url)
                             .font(.system(size: 12, design: .monospaced))
@@ -126,7 +123,6 @@ private struct EnvironmentCard: View {
                             .lineLimit(1)
                     }
 
-                    // Notes
                     if !env.notes.isEmpty {
                         HStack(spacing: 4) {
                             Image(systemName: "exclamationmark.triangle.fill")

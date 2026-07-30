@@ -102,7 +102,6 @@ struct CustomActionListView: View {
         NooberSound.playAreBaapRe()
         runningActionId = action.id
 
-        // Run the handler, then show brief completion feedback
         action.handler()
 
         withAnimation(.spring(response: 0.3)) {

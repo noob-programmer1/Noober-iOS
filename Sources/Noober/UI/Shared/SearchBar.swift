@@ -1,6 +1,5 @@
 import SwiftUI
 
-// NooberSearchBar is available as a reusable component for future tabs.
 struct NooberSearchBar: View {
 
     @Binding var text: String

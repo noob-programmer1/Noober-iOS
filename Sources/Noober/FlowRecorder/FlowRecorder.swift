@@ -93,7 +93,6 @@ public final class FlowRecorder: ObservableObject {
         let distance = sqrt(dx * dx + dy * dy)
 
         if distance > 50 {
-            // Swipe
             let direction: String
             if abs(dx) > abs(dy) {
                 direction = dx > 0 ? "right" : "left"
@@ -108,7 +107,6 @@ public final class FlowRecorder: ObservableObject {
                 extra: ["direction": direction]
             ))
         } else {
-            // Tap
             currentSteps.append(NooberFlowStep(
                 action: .tap,
                 screen: screen,

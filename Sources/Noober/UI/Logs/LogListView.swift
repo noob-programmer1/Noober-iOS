@@ -226,14 +226,12 @@ private struct LogRowView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            // Level color strip
             RoundedRectangle(cornerRadius: 2)
                 .fill(NooberTheme.logLevelColor(entry.level))
                 .frame(width: 4)
                 .padding(.vertical, 4)
 
             VStack(alignment: .leading, spacing: 5) {
-                // Row 1: Level + Category + Time
                 HStack(spacing: 4) {
                     LogLevelBadge(level: entry.level)
                     TypeBadge(text: entry.category.rawValue.uppercased(), color: NooberTheme.logCategoryColor)
@@ -243,13 +241,11 @@ private struct LogRowView: View {
                         .foregroundColor(Color(.tertiaryLabel))
                 }
 
-                // Row 2: Message
                 Text(entry.message)
                     .font(.system(size: 13))
                     .foregroundColor(.primary)
                     .lineLimit(2)
 
-                // Row 3: File:line
                 if !entry.file.isEmpty {
                     Text("\((entry.file as NSString).lastPathComponent):\(entry.line)")
                         .font(.system(size: 10, design: .monospaced))

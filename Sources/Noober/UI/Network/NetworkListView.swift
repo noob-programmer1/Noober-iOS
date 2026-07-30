@@ -40,16 +40,12 @@ struct NetworkListView: View {
 
     private var filteredEntries: [NetworkEntry] {
         store.allEntries.filter { entry in
-            // Type filter
             if let type = selectedEntryType, entry.entryType != type { return false }
 
-            // WebView filter
             if webViewOnly && !entry.isWebView { return false }
 
-            // Host filter
             if !selectedHosts.isEmpty && !selectedHosts.contains(entry.host) { return false }
 
-            // Screen filter
             if !selectedScreens.isEmpty {
                 let screen = entry.screenName ?? "Unknown"
                 if !selectedScreens.contains(screen) { return false }
@@ -70,7 +66,6 @@ struct NetworkListView: View {
                 }
                 // Method
                 if !selectedMethods.isEmpty && !selectedMethods.contains(req.method) { return false }
-                // Status
                 if !selectedStatuses.isEmpty && !selectedStatuses.contains(req.statusCodeCategory) { return false }
                 return true
 
@@ -140,7 +135,6 @@ struct NetworkListView: View {
             .padding(.vertical, 9)
             .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color(.tertiarySystemFill)))
 
-            // Filter button
             Button { showFilterSheet = true } label: {
                 ZStack(alignment: .topTrailing) {
                     Image(systemName: "line.3.horizontal.decrease.circle")
@@ -165,7 +159,6 @@ struct NetworkListView: View {
                 )
             }
 
-            // Trash
             if !store.requests.isEmpty || !store.webSocketConnections.isEmpty {
                 Button {
                     NooberTheme.hapticMedium()
@@ -239,7 +232,6 @@ struct NetworkListView: View {
     private var typeAndStatusChips: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 6) {
-                // Type chips
                 FilterChip(title: "All", isSelected: selectedEntryType == nil) { selectedEntryType = nil }
                 FilterChip(title: "HTTP (\(store.requests.count))", isSelected: selectedEntryType == .http) {
                     selectedEntryType = selectedEntryType == .http ? nil : .http
@@ -253,7 +245,6 @@ struct NetworkListView: View {
                     }
                 }
 
-                // Separator
                 Rectangle().fill(Color(.separator)).frame(width: 1, height: 20)
 
                 // Status chips (only relevant for HTTP)
@@ -267,7 +258,6 @@ struct NetworkListView: View {
                     }
                 }
 
-                // Screen chips (group toggle + per-screen filters)
                 if !store.uniqueScreenNames.isEmpty {
                     Rectangle().fill(Color(.separator)).frame(width: 1, height: 20)
 
@@ -499,14 +489,12 @@ private struct HTTPRowView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            // Status color strip
             RoundedRectangle(cornerRadius: 2)
                 .fill(NooberTheme.statusColor(request.statusCodeCategory))
                 .frame(width: 4)
                 .padding(.vertical, 4)
 
             HStack(spacing: 10) {
-                // Image thumbnail if response is an image
                 if request.isImage, let img = request.responseImage {
                     Image(uiImage: img)
                         .resizable()
@@ -520,7 +508,6 @@ private struct HTTPRowView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 5) {
-                    // Row 1: Badges
                     HStack(spacing: 4) {
                         MethodBadge(method: request.method)
                         StatusBadge(statusCode: request.statusCode, category: request.statusCodeCategory)
@@ -544,14 +531,12 @@ private struct HTTPRowView: View {
                         DurationLabel(duration: request.duration)
                     }
 
-                    // Row 2: Path
                     Text(request.path)
                         .font(.system(size: 13, weight: .medium, design: .monospaced))
                         .foregroundColor(.primary)
                         .lineLimit(1)
                         .truncationMode(.middle)
 
-                    // Row 3: Meta
                     HStack(spacing: 6) {
                         Text(request.host)
                             .lineLimit(1)
@@ -589,14 +574,12 @@ private struct WebSocketRowView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            // Purple strip for WS
             RoundedRectangle(cornerRadius: 2)
                 .fill(NooberTheme.webSocket)
                 .frame(width: 4)
                 .padding(.vertical, 4)
 
             VStack(alignment: .leading, spacing: 5) {
-                // Row 1: WS badge + status
                 HStack(spacing: 4) {
                     WebSocketBadge(status: connection.status)
                     Text(connection.status.rawValue)
@@ -613,14 +596,12 @@ private struct WebSocketRowView: View {
                     }
                 }
 
-                // Row 2: URL path
                 Text(connection.displayName)
                     .font(.system(size: 13, weight: .medium, design: .monospaced))
                     .foregroundColor(.primary)
                     .lineLimit(1)
                     .truncationMode(.middle)
 
-                // Row 3: Host + frame count + time
                 HStack(spacing: 6) {
                     Text(connection.host).lineLimit(1)
                     Spacer()
@@ -646,7 +627,6 @@ struct WebSocketDetailPlaceholder: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                // Header
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 6) {
                         WebSocketBadge(status: connection.status)
@@ -667,7 +647,6 @@ struct WebSocketDetailPlaceholder: View {
                 .background(Color(.secondarySystemBackground))
                 .cornerRadius(12)
 
-                // Frames list
                 if connection.frames.isEmpty {
                     Text("No frames captured yet")
                         .foregroundColor(.secondary)
@@ -690,7 +669,6 @@ struct WebSocketDetailPlaceholder: View {
 
     private func wsFrameRow(_ frame: WebSocketFrameModel) -> some View {
         HStack(alignment: .top, spacing: 8) {
-            // Direction indicator
             Image(systemName: frame.direction == .sent ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
                 .font(.system(size: 14))
                 .foregroundColor(frame.direction == .sent ? NooberTheme.warning : NooberTheme.info)

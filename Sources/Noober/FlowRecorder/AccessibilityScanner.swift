@@ -69,7 +69,6 @@ public enum AccessibilityScanner {
             scanViewHierarchy(window, into: &elements)
         }
 
-        // Deduplicate by label + approximate frame
         elements = elements.filter { el in
             let key = "\(el.label)|\(Int(el.frame.minX / 4) * 4),\(Int(el.frame.minY / 4) * 4)"
             if visitedFrames.contains(key) { return false }
@@ -115,7 +114,6 @@ public enum AccessibilityScanner {
             }
         }
 
-        // Recurse via UIView subviews
         if let view = element as? UIView {
             guard !view.isHidden && view.alpha >= 0.01 else { return }
             guard !(view is BubbleWindow) && !isNooberView(view) else { return }
@@ -149,7 +147,6 @@ public enum AccessibilityScanner {
         let frame = view.convert(view.bounds, to: nil) // screen coordinates
         guard frame.width > 0 && frame.height > 0 else { return }
 
-        // Extract text from specific UIKit view types
         if let label = view as? UILabel, let text = label.text, !text.isEmpty {
             let isHeader = label.font.pointSize >= 20
             results.append(Element(
@@ -220,7 +217,6 @@ public enum AccessibilityScanner {
         } else if let tabBar = view as? UITabBar {
             for item in tabBar.items ?? [] {
                 if let title = item.title {
-                    // Approximate frame for each tab item
                     let itemCount = CGFloat(tabBar.items?.count ?? 1)
                     let index = CGFloat(tabBar.items?.firstIndex(of: item) ?? 0)
                     let itemWidth = frame.width / itemCount
@@ -268,7 +264,6 @@ public enum AccessibilityScanner {
             }
         }
 
-        // Recurse into subviews
         for subview in view.subviews {
             scanViewHierarchy(subview, into: &results)
         }

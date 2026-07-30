@@ -35,7 +35,6 @@ struct NetworkRequestModel: Identifiable, Sendable {
             if mime.contains("pdf") { return .pdf }
             if mime.contains("javascript") || mime.contains("css") { return .text }
         }
-        // Fallback: try to detect from body
         if let data = responseBody, !data.isEmpty {
             if (try? JSONSerialization.jsonObject(with: data)) != nil { return .json }
             if UIImage(data: data) != nil { return .image }

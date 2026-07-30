@@ -21,7 +21,6 @@ struct FilterSheetView: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
-                    // Source
                     if hasWebViewRequests {
                         filterSection(title: "Source", icon: "globe") {
                             chipGrid {
@@ -35,7 +34,6 @@ struct FilterSheetView: View {
                         }
                     }
 
-                    // Methods
                     filterSection(title: "HTTP Method", icon: "arrow.up.arrow.down") {
                         chipGrid {
                             ForEach(methods, id: \.self) { method in
@@ -45,7 +43,6 @@ struct FilterSheetView: View {
                         }
                     }
 
-                    // Status codes
                     filterSection(title: "Status Code", icon: "number") {
                         chipGrid {
                             ForEach(NetworkRequestModel.StatusCodeCategory.allCases, id: \.self) { cat in
@@ -55,7 +52,6 @@ struct FilterSheetView: View {
                         }
                     }
 
-                    // Hosts
                     if !hosts.isEmpty {
                         filterSection(title: "Host", icon: "server.rack") {
                             chipGrid {

@@ -21,13 +21,11 @@ struct UserDefaultsListView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Search bar
             NooberSearchBar(text: $searchText, placeholder: "Search keys, values...")
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
                 .padding(.bottom, 4)
 
-            // Stats bar
             statsBar
 
             Divider()
@@ -232,7 +230,6 @@ private struct UserDefaultsRowView: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            // Color strip
             RoundedRectangle(cornerRadius: 2)
                 .fill(NooberTheme.userDefaultsTypeColor(entry.valueType))
                 .frame(width: 3, height: 38)

@@ -54,7 +54,6 @@ final class NooberWindow {
 
         let bubbleView = FloatingBubbleView { [weak self] in
             if FlowRecorder.shared.isRecording {
-                // Tap during recording → stop recording and show AI Flows tab
                 FlowRecorder.shared.stopRecording()
                 self?.showDebugger(tab: .more)
             } else {
@@ -77,7 +76,6 @@ final class NooberWindow {
 
     func showDebugger(tab: NooberTab? = nil) {
         guard debuggerWindow == nil else {
-            // Already showing — just switch tab if requested
             if let tab, let tabBar = debuggerWindow?.rootViewController as? UITabBarController {
                 tabBar.selectedIndex = tab.rawValue
             }

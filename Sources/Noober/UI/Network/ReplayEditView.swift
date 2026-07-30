@@ -18,7 +18,6 @@ struct ReplayEditView: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    // Method
                     sectionHeader("Method")
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
@@ -44,7 +43,6 @@ struct ReplayEditView: View {
                         .padding(.horizontal, 16)
                     }
 
-                    // URL
                     sectionHeader("URL")
                     TextField("https://...", text: $url)
                         .font(.system(size: 13, design: .monospaced))
@@ -58,7 +56,6 @@ struct ReplayEditView: View {
                         )
                         .padding(.horizontal, 16)
 
-                    // Headers
                     sectionHeader("Headers (\(headers.count))")
                     VStack(spacing: 8) {
                         ForEach(Array(headers.enumerated()), id: \.offset) { index, _ in
@@ -107,7 +104,6 @@ struct ReplayEditView: View {
                     }
                     .padding(.horizontal, 16)
 
-                    // Body
                     if method != "GET" && method != "HEAD" {
                         sectionHeader("Body")
                         ZStack(alignment: .topLeading) {

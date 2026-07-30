@@ -48,10 +48,8 @@ struct FloatingBubbleView: View {
                         }
                         .onEnded { value in
                             if !isDragging {
-                                // It was a tap
                                 onTap()
                             } else {
-                                // Snap to edge
                                 let screenWidth = geometry.size.width
                                 let snappedX = position.x < screenWidth / 2
                                     ? (size / 2 + 4)
@@ -98,21 +96,18 @@ struct FloatingBubbleView: View {
 
     private var bubbleContent: some View {
         ZStack {
-            // Outer pulse ring
             Circle()
                 .stroke(ringColor, lineWidth: 2.5)
                 .frame(width: size, height: size)
                 .scaleEffect(ringScale)
                 .opacity(ringOpacity)
 
-            // Glow layer
             Circle()
                 .fill(ringColor)
                 .frame(width: size, height: size)
                 .blur(radius: 12)
                 .opacity(glowOpacity)
 
-            // Main bubble
             Circle()
                 .fill(
                     LinearGradient(
@@ -149,7 +144,6 @@ struct FloatingBubbleView: View {
                     y: isDragging ? 6 : 4
                 )
 
-            // Request count badge
             if showBadge && requestCountBadge > 0 {
                 Text(requestCountBadge > 99 ? "99+" : "\(requestCountBadge)")
                     .font(.system(size: 10, weight: .bold, design: .rounded))
@@ -161,7 +155,6 @@ struct FloatingBubbleView: View {
                     .transition(.scale.combined(with: .opacity))
             }
 
-            // Recording indicator — red pulsing dot
             if FlowRecorder.shared.isRecording {
                 ZStack {
                     Circle()

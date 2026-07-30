@@ -21,7 +21,6 @@ struct RewriteRuleEditView: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    // Name
                     sectionHeader("Name")
                     TextField("e.g. Prod → Staging", text: $name)
                         .font(.system(size: 14))
@@ -30,7 +29,6 @@ struct RewriteRuleEditView: View {
                         .background(fieldBackground)
                         .padding(.horizontal, 16)
 
-                    // Match Mode
                     sectionHeader("Match Mode")
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
@@ -56,7 +54,6 @@ struct RewriteRuleEditView: View {
                         .padding(.horizontal, 16)
                     }
 
-                    // Pattern
                     sectionHeader("Match Pattern")
                     TextField(patternPlaceholder, text: $pattern)
                         .font(.system(size: 13, design: .monospaced))
@@ -67,7 +64,6 @@ struct RewriteRuleEditView: View {
                         .background(fieldBackground)
                         .padding(.horizontal, 16)
 
-                    // Replacement
                     sectionHeader("Replace With")
                     TextField("api.staging.com", text: $replacement)
                         .font(.system(size: 13, design: .monospaced))
@@ -78,7 +74,6 @@ struct RewriteRuleEditView: View {
                         .background(fieldBackground)
                         .padding(.horizontal, 16)
 
-                    // Enabled
                     HStack {
                         sectionHeader("Enabled")
                         Spacer()
