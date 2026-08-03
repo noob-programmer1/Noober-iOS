@@ -29,14 +29,12 @@ public final class WebViewInterceptor {
     // MARK: - JavaScript injection
 
     private static let interceptorJS = """
-    // === Noober WebView Interceptor ===
     (function() {
         if (window.__nooberIntercepted) return;
         window.__nooberIntercepted = true;
 
         const rules = window.__nooberRules || { rewrites: [], mocks: [] };
 
-        // --- Rule matching ---
         function matchesPattern(url, pattern, mode) {
             if (mode === 'contains') return url.indexOf(pattern) !== -1;
             if (mode === 'prefix') return url.indexOf(pattern) === 0;
@@ -69,7 +67,6 @@ public final class WebViewInterceptor {
             return url;
         }
 
-        // --- Intercept fetch ---
         const originalFetch = window.fetch;
         window.fetch = function(input, init) {
             const url = (typeof input === 'string') ? input : input.url;
@@ -80,7 +77,6 @@ public final class WebViewInterceptor {
             const startTime = Date.now();
             const requestId = Math.random().toString(36).substr(2, 9);
 
-            // Check mock rules
             var mockRule = findMockRule(fullUrl, method);
             if (mockRule) {
                 var mockBody = mockRule.body || '';
@@ -98,10 +94,8 @@ public final class WebViewInterceptor {
                 }));
             }
 
-            // Apply rewrite rules
             fullUrl = applyRewrite(fullUrl);
 
-            // Override the input if URL was rewritten
             var fetchArgs = arguments;
             if (fullUrl !== new URL(url, window.location.href).href) {
                 fetchArgs = [fullUrl, init];
@@ -142,7 +136,6 @@ public final class WebViewInterceptor {
             });
         };
 
-        // --- Intercept XMLHttpRequest ---
         const OrigXHR = window.XMLHttpRequest;
         window.XMLHttpRequest = function() {
             const xhr = new OrigXHR();
@@ -157,7 +150,6 @@ public final class WebViewInterceptor {
             xhr.open = function(m, u) {
                 method = m;
                 url = new URL(u, window.location.href).href;
-                // Apply rewrite rules
                 url = applyRewrite(url);
                 return originalOpen.call(xhr, m, url);
             };
@@ -173,7 +165,6 @@ public final class WebViewInterceptor {
                 reqBody = body ? String(body).substring(0, 2000) : null;
                 startTime = Date.now();
 
-                // Check mock rules
                 var mockRule = findMockRule(url, method);
                 if (mockRule) {
                     window.webkit.messageHandlers.nooberNetwork.postMessage({
@@ -183,7 +174,6 @@ public final class WebViewInterceptor {
                         responseBody: (mockRule.body || '').substring(0, 2000),
                         mocked: true
                     });
-                    // Simulate XHR response
                     Object.defineProperty(xhr, 'status', { value: mockRule.statusCode });
                     Object.defineProperty(xhr, 'responseText', { value: mockRule.body || '' });
                     Object.defineProperty(xhr, 'readyState', { value: 4 });
@@ -212,13 +202,11 @@ public final class WebViewInterceptor {
 
             return xhr;
         };
-        // Copy static methods
         Object.keys(OrigXHR).forEach(function(key) {
             try { window.XMLHttpRequest[key] = OrigXHR[key]; } catch(e) {}
         });
         window.XMLHttpRequest.prototype = OrigXHR.prototype;
 
-        // --- Intercept console ---
         ['log', 'warn', 'error', 'info', 'debug'].forEach(function(level) {
             const original = console[level];
             console[level] = function() {
@@ -256,7 +244,6 @@ public final class WebViewInterceptor {
     private static func buildRulesJS() -> String {
         let store = RulesStore.shared
 
-        // Rewrite rules
         var rewrites: [[String: String]] = []
         for rule in store.rewriteRules where rule.isEnabled {
             rewrites.append([
@@ -266,7 +253,6 @@ public final class WebViewInterceptor {
             ])
         }
 
-        // Mock rules
         var mocks: [[String: Any]] = []
         for rule in store.mockRules where rule.isEnabled {
             var mock: [String: Any] = [
@@ -316,7 +302,6 @@ public final class WebViewInterceptor {
             injectScripts(into: config.userContentController)
             registerMessageHandlers(on: config.userContentController)
 
-            // Call original init
             let original = unsafeBitCast(originalInitIMP!, to: (@convention(c) (WKWebView, Selector, CGRect, WKWebViewConfiguration) -> WKWebView).self)
             return original(webView, sel, frame, config)
         }
@@ -359,7 +344,6 @@ private class NooberWebViewMessageHandler: NSObject, WKScriptMessageHandler {
         let error = body["error"] as? String
         let isMocked = body["mocked"] as? Bool ?? false
 
-        // Add to NetworkActivityStore as a proper network entry
         let model = NetworkRequestModel(
             webViewURL: url,
             method: method,
@@ -376,7 +360,6 @@ private class NooberWebViewMessageHandler: NSObject, WKScriptMessageHandler {
         )
         NetworkActivityStore.shared.addRequest(model)
 
-        // Also log for the Logs tab
         let statusText = status > 0 ? "\(status)" : (error ?? "failed")
         let message = "[\(type.uppercased())] \(method) \(statusText) \(duration)ms \(url)"
 

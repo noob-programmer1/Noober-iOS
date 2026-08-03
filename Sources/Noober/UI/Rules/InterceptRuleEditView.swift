@@ -5,7 +5,7 @@ struct InterceptRuleEditView: View {
     @ObservedObject var store: RulesStore
     let existingRule: InterceptRule?
     let prefillFromRequest: NetworkRequestModel?
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.presentationMode) private var presentationMode
 
     @State private var name = ""
     @State private var matchMode: URLMatchMode = .contains
@@ -26,7 +26,6 @@ struct InterceptRuleEditView: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    // Name
                     sectionHeader("Name")
                     TextField("e.g. Intercept /api/users", text: $name)
                         .font(.system(size: 14))
@@ -35,7 +34,6 @@ struct InterceptRuleEditView: View {
                         .background(fieldBackground)
                         .padding(.horizontal, 16)
 
-                    // Match Mode
                     sectionHeader("Match Mode")
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
@@ -61,18 +59,16 @@ struct InterceptRuleEditView: View {
                         .padding(.horizontal, 16)
                     }
 
-                    // Pattern
                     sectionHeader("Match Pattern")
                     TextField("/api/users", text: $pattern)
                         .font(.system(size: 13, design: .monospaced))
                         .textFieldStyle(.plain)
-                        .textInputAutocapitalization(.never)
+                        .autocapitalization(.none)
                         .disableAutocorrection(true)
                         .padding(10)
                         .background(fieldBackground)
                         .padding(.horizontal, 16)
 
-                    // HTTP Method filter
                     HStack {
                         sectionHeader("Filter by Method")
                         Spacer()
@@ -106,7 +102,6 @@ struct InterceptRuleEditView: View {
                         }
                     }
 
-                    // Enabled
                     HStack {
                         sectionHeader("Enabled")
                         Spacer()
@@ -119,22 +114,17 @@ struct InterceptRuleEditView: View {
                 }
                 .padding(.top, 8)
             }
-            .background(Color(uiColor: .systemGroupedBackground))
-            .navigationTitle(existingRule != nil ? "Edit Rule" : "New Intercept Rule")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
-                        .foregroundColor(.secondary)
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") { save() }
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(NooberTheme.accent)
-                        .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty
-                                  || pattern.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
-            }
+            .background(Color(.systemGroupedBackground))
+            .nooberNavigationBarTitle(existingRule != nil ? "Edit Rule" : "New Intercept Rule")
+            .navigationBarItems(
+                leading: Button("Cancel") { presentationMode.wrappedValue.dismiss() }
+                    .foregroundColor(.secondary),
+                trailing: Button("Save") { save() }
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(NooberTheme.accent)
+                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty
+                              || pattern.trimmingCharacters(in: .whitespaces).isEmpty)
+            )
             .onAppear { prefill() }
         }
     }
@@ -143,14 +133,13 @@ struct InterceptRuleEditView: View {
 
     private var fieldBackground: some View {
         RoundedRectangle(cornerRadius: 8, style: .continuous)
-            .fill(Color(uiColor: .tertiarySystemFill))
+            .fill(Color(.tertiarySystemFill))
     }
 
     private func sectionHeader(_ title: String) -> some View {
-        Text(title)
+        Text(title.uppercased())
             .font(.system(size: 12, weight: .bold))
             .foregroundColor(NooberTheme.accent)
-            .textCase(.uppercase)
             .padding(.horizontal, 16)
     }
 
@@ -191,6 +180,6 @@ struct InterceptRuleEditView: View {
             )
             store.addInterceptRule(rule)
         }
-        dismiss()
+        presentationMode.wrappedValue.dismiss()
     }
 }

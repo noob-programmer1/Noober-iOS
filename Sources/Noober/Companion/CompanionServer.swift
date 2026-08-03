@@ -132,7 +132,6 @@ final class CompanionServer {
         case .ready:
             break
         case .failed:
-            // Restart after a brief delay
             listener?.cancel()
             listener = nil
             Task { @MainActor in
@@ -149,7 +148,6 @@ final class CompanionServer {
     // MARK: - Connection Handling
 
     private func handleNewConnection(_ connection: NWConnection) {
-        // If we already have an active connection, cancel it
         if let existing = activeConnection {
             existing.cancel()
             observer?.cancel()
@@ -219,7 +217,6 @@ final class CompanionServer {
                     // Decode errors (e.g. unknown message type) are NOT fatal —
                     // skip the bad message and keep the connection alive.
                     if error is DecodingError {
-                        // Continue receiving
                     } else {
                         self.handleConnectionLost()
                         return
@@ -228,13 +225,11 @@ final class CompanionServer {
 
                 if let message {
                     if message.type == .heartbeat {
-                        // Heartbeat received - connection is alive
                     } else {
                         CommandHandler.handle(message)
                     }
                 }
 
-                // Schedule next receive
                 self.receiveNextMessage()
             }
         }
@@ -251,7 +246,6 @@ final class CompanionServer {
         let userDefaultsStore = UserDefaultsStore.shared
         let keychainStore = KeychainStore.shared
 
-        // Refresh stores that need it
         userDefaultsStore.refresh()
         keychainStore.refresh()
 

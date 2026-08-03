@@ -83,7 +83,6 @@ final class StoreObserver {
 
                 let currentIds = Set(connections.map(\.id))
 
-                // Detect new connections
                 let newConnectionIds = currentIds.subtracting(self.lastSeenWSConnectionIds)
                 for conn in connections where newConnectionIds.contains(conn.id) {
                     let transferable = conn.toTransferable()
@@ -93,7 +92,6 @@ final class StoreObserver {
                     self.lastSeenWSFrameCounts[conn.id] = conn.frames.count
                 }
 
-                // Detect new frames on existing connections
                 for conn in connections where !newConnectionIds.contains(conn.id) {
                     let previousFrameCount = self.lastSeenWSFrameCounts[conn.id] ?? 0
                     if conn.frames.count > previousFrameCount {
@@ -108,7 +106,6 @@ final class StoreObserver {
                     self.lastSeenWSFrameCounts[conn.id] = conn.frames.count
                 }
 
-                // Detect status changes for existing connections
                 for conn in connections where !newConnectionIds.contains(conn.id) {
                     let statusChange = TransferableWSStatusChange(
                         connectionId: conn.id,
@@ -192,7 +189,6 @@ final class StoreObserver {
     private func observeRulesStore() {
         let store = RulesStore.shared
 
-        // Observe all three rule types with a merged publisher
         store.$rewriteRules
             .combineLatest(store.$mockRules, store.$interceptRules)
             .dropFirst()
@@ -228,7 +224,6 @@ final class StoreObserver {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] results in
                 guard let self, let server = self.server else { return }
-                // Check if any status changed
                 var changed = results.count != self.lastSeenQAResults.count
                 if !changed {
                     for result in results {

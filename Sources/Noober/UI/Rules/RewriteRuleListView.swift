@@ -47,19 +47,19 @@ struct RewriteRuleListView: View {
                 TextField("Search rules...", text: $searchText)
                     .font(.system(size: 15))
                     .textFieldStyle(.plain)
-                    .textInputAutocapitalization(.never)
+                    .autocapitalization(.none)
                     .disableAutocorrection(true)
                 if !searchText.isEmpty {
                     Button { searchText = "" } label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 15))
-                            .foregroundColor(Color(uiColor: .tertiaryLabel))
+                            .foregroundColor(Color(.tertiaryLabel))
                     }
                 }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 9)
-            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color(uiColor: .tertiarySystemFill)))
+            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color(.tertiarySystemFill)))
 
             Button { showAddSheet = true } label: {
                 Image(systemName: "plus.circle.fill")
@@ -97,7 +97,7 @@ struct RewriteRuleListView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color(.secondarySystemBackground))
     }
 
     // MARK: - List
@@ -111,31 +111,25 @@ struct RewriteRuleListView: View {
                 }
                 .contextMenu {
                     Button { editingRule = rule } label: {
-                        Label("Edit", systemImage: "pencil")
+                        NooberLabel("Edit", systemImage: "pencil")
                     }
                     Button {
                         store.toggleRewriteRule(rule)
                     } label: {
-                        Label(rule.isEnabled ? "Disable" : "Enable",
+                        NooberLabel(rule.isEnabled ? "Disable" : "Enable",
                               systemImage: rule.isEnabled ? "pause.circle" : "play.circle")
                     }
                     Divider()
-                    Button(role: .destructive) {
+                    NooberDestructiveButton("Delete", systemImage: "trash") {
                         withAnimation { store.deleteRewriteRule(rule) }
-                    } label: {
-                        Label("Delete", systemImage: "trash")
                     }
                 }
-                .swipeActions(edge: .trailing) {
-                    Button(role: .destructive) {
-                        NooberTheme.hapticMedium()
-                        store.deleteRewriteRule(rule)
-                    } label: {
-                        Label("Delete", systemImage: "trash")
-                    }
+                .nooberSwipeAction(edge: .trailing, isDestructive: true, label: "Delete", systemImage: "trash") {
+                    NooberTheme.hapticMedium()
+                    store.deleteRewriteRule(rule)
                 }
                 .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 16))
-                .listRowSeparator(.hidden)
+                .nooberHideRowSeparator()
             }
             .onMove { store.moveRewriteRule(from: $0, to: $1) }
         }
@@ -148,15 +142,15 @@ struct RewriteRuleListView: View {
         VStack(spacing: 16) {
             Spacer()
             ZStack {
-                Circle().fill(Color(uiColor: .tertiarySystemFill)).frame(width: 80, height: 80)
+                Circle().fill(Color(.tertiarySystemFill)).frame(width: 80, height: 80)
                 Image(systemName: "arrow.triangle.swap")
                     .font(.system(size: 32, weight: .thin))
-                    .foregroundColor(Color(uiColor: .tertiaryLabel))
+                    .foregroundColor(Color(.tertiaryLabel))
             }
             Text("No Rewrite Rules")
                 .font(.system(size: 17, weight: .semibold)).foregroundColor(.secondary)
             Text("Redirect API requests to different\nhosts or URLs.")
-                .font(.system(size: 14)).foregroundColor(Color(uiColor: .tertiaryLabel)).multilineTextAlignment(.center)
+                .font(.system(size: 14)).foregroundColor(Color(.tertiaryLabel)).multilineTextAlignment(.center)
             Button { showAddSheet = true } label: {
                 Text("Add Rule")
                     .font(.system(size: 14, weight: .medium))
@@ -179,7 +173,7 @@ private struct RewriteRuleRow: View {
     var body: some View {
         HStack(spacing: 0) {
             RoundedRectangle(cornerRadius: 2)
-                .fill(rule.isEnabled ? NooberTheme.rewrite : Color(uiColor: .tertiaryLabel))
+                .fill(rule.isEnabled ? NooberTheme.rewrite : Color(.tertiaryLabel))
                 .frame(width: 4)
                 .padding(.vertical, 4)
 
@@ -210,7 +204,7 @@ private struct RewriteRuleRow: View {
                             .lineLimit(1)
                     }
                     .font(.system(size: 11, design: .monospaced))
-                    .foregroundColor(Color(uiColor: .tertiaryLabel))
+                    .foregroundColor(Color(.tertiaryLabel))
                 }
             }
             .padding(.leading, 10)
@@ -218,6 +212,6 @@ private struct RewriteRuleRow: View {
         }
         .padding(.leading, 16)
         .opacity(rule.isEnabled ? 1 : 0.5)
-        .overlay(alignment: .bottom) { Divider().padding(.leading, 30) }
+        .overlay(Divider().padding(.leading, 30), alignment: .bottom)
     }
 }

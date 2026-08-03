@@ -35,7 +35,6 @@ enum JSONFlattener {
                 let fullKey = prefix.isEmpty ? key : "\(prefix).\(key)"
                 let child = dict[key]!
                 if child is [String: Any] || child is [Any] {
-                    // Add a group header
                     let summary = child is [String: Any]
                         ? "{\((child as! [String: Any]).count) keys}"
                         : "[\((child as! [Any]).count) items]"

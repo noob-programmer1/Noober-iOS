@@ -47,19 +47,19 @@ struct InterceptRuleListView: View {
                 TextField("Search intercept rules...", text: $searchText)
                     .font(.system(size: 15))
                     .textFieldStyle(.plain)
-                    .textInputAutocapitalization(.never)
+                    .autocapitalization(.none)
                     .disableAutocorrection(true)
                 if !searchText.isEmpty {
                     Button { searchText = "" } label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 15))
-                            .foregroundColor(Color(uiColor: .tertiaryLabel))
+                            .foregroundColor(Color(.tertiaryLabel))
                     }
                 }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 9)
-            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color(uiColor: .tertiarySystemFill)))
+            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color(.tertiarySystemFill)))
 
             Button { showAddSheet = true } label: {
                 Image(systemName: "plus.circle.fill")
@@ -97,7 +97,7 @@ struct InterceptRuleListView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color(.secondarySystemBackground))
     }
 
     // MARK: - List
@@ -112,32 +112,26 @@ struct InterceptRuleListView: View {
                 }
                 .contextMenu {
                     Button { editingRule = rule } label: {
-                        Label("Edit", systemImage: "pencil")
+                        NooberLabel("Edit", systemImage: "pencil")
                     }
                     Button {
                         NooberSound.playFaaa()
                         store.toggleInterceptRule(rule)
                     } label: {
-                        Label(rule.isEnabled ? "Disable" : "Enable",
+                        NooberLabel(rule.isEnabled ? "Disable" : "Enable",
                               systemImage: rule.isEnabled ? "pause.circle" : "play.circle")
                     }
                     Divider()
-                    Button(role: .destructive) {
+                    NooberDestructiveButton("Delete", systemImage: "trash") {
                         withAnimation { store.deleteInterceptRule(rule) }
-                    } label: {
-                        Label("Delete", systemImage: "trash")
                     }
                 }
-                .swipeActions(edge: .trailing) {
-                    Button(role: .destructive) {
-                        NooberTheme.hapticMedium()
-                        store.deleteInterceptRule(rule)
-                    } label: {
-                        Label("Delete", systemImage: "trash")
-                    }
+                .nooberSwipeAction(edge: .trailing, isDestructive: true, label: "Delete", systemImage: "trash") {
+                    NooberTheme.hapticMedium()
+                    store.deleteInterceptRule(rule)
                 }
                 .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 16))
-                .listRowSeparator(.hidden)
+                .nooberHideRowSeparator()
             }
             .onMove { store.moveInterceptRule(from: $0, to: $1) }
         }
@@ -150,15 +144,15 @@ struct InterceptRuleListView: View {
         VStack(spacing: 16) {
             Spacer()
             ZStack {
-                Circle().fill(Color(uiColor: .tertiarySystemFill)).frame(width: 80, height: 80)
+                Circle().fill(Color(.tertiarySystemFill)).frame(width: 80, height: 80)
                 Image(systemName: "hand.raised")
                     .font(.system(size: 32, weight: .thin))
-                    .foregroundColor(Color(uiColor: .tertiaryLabel))
+                    .foregroundColor(Color(.tertiaryLabel))
             }
             Text("No Intercept Rules")
                 .font(.system(size: 17, weight: .semibold)).foregroundColor(.secondary)
             Text("Pause requests before they're sent.\nReview, edit, then continue or cancel.")
-                .font(.system(size: 14)).foregroundColor(Color(uiColor: .tertiaryLabel)).multilineTextAlignment(.center)
+                .font(.system(size: 14)).foregroundColor(Color(.tertiaryLabel)).multilineTextAlignment(.center)
             Button { showAddSheet = true } label: {
                 Text("Add Rule")
                     .font(.system(size: 14, weight: .medium))
@@ -179,10 +173,10 @@ struct InterceptRuleListView: View {
                 .foregroundColor(.yellow)
             Text("Long press any request to prefill an intercept rule.")
                 .font(.system(size: 12))
-                .foregroundColor(Color(uiColor: .secondaryLabel))
+                .foregroundColor(Color(.secondaryLabel))
         }
         .padding(.horizontal, 16).padding(.vertical, 10)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color(uiColor: .tertiarySystemFill)))
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color(.tertiarySystemFill)))
     }
 }
 
@@ -197,7 +191,7 @@ private struct InterceptRuleRow: View {
     var body: some View {
         HStack(spacing: 0) {
             RoundedRectangle(cornerRadius: 2)
-                .fill(rule.isEnabled ? interceptColor : Color(uiColor: .tertiaryLabel))
+                .fill(rule.isEnabled ? interceptColor : Color(.tertiaryLabel))
                 .frame(width: 4)
                 .padding(.vertical, 4)
 
@@ -224,7 +218,7 @@ private struct InterceptRuleRow: View {
                         .lineLimit(1)
                     Text(rule.matchPattern.pattern)
                         .font(.system(size: 11, design: .monospaced))
-                        .foregroundColor(Color(uiColor: .tertiaryLabel))
+                        .foregroundColor(Color(.tertiaryLabel))
                         .lineLimit(1)
                 }
             }
@@ -233,6 +227,6 @@ private struct InterceptRuleRow: View {
         }
         .padding(.leading, 16)
         .opacity(rule.isEnabled ? 1 : 0.5)
-        .overlay(alignment: .bottom) { Divider().padding(.leading, 30) }
+        .overlay(Divider().padding(.leading, 30), alignment: .bottom)
     }
 }

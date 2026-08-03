@@ -12,6 +12,7 @@ struct NetworkDetailView: View {
     @State private var showCreateMockSheet = false
     @State private var showCreateInterceptSheet = false
     @State private var isBodyExpanded = false
+    @State private var showActionSheet = false
 
     private enum BodyViewMode: String, CaseIterable {
         case list = "List"
@@ -22,7 +23,6 @@ struct NetworkDetailView: View {
         CURLGenerator.generate(from: request)
     }
 
-    // Pre-computed flattened bodies
     private var requestBodyKV: [JSONFlattener.KeyValue] {
         guard let body = request.requestBody else { return [] }
         return JSONFlattener.flatten(body)
@@ -35,19 +35,22 @@ struct NetworkDetailView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Search bar
             NooberSearchBar(text: $searchText, placeholder: "Search headers, body, values...")
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
                 .padding(.bottom, 4)
 
-            // Summary header card
             if searchText.isEmpty {
                 headerCard
             }
 
-            // Tab picker
-            Picker("Section", selection: $selectedTab) {
+            Picker("Section", selection: Binding(
+                get: { selectedTab },
+                set: { newValue in
+                    selectedTab = newValue
+                    NooberTheme.hapticLight()
+                }
+            )) {
                 Text("Overview").tag(0)
                 Text("Request").tag(1)
                 Text("Response").tag(2)
@@ -56,11 +59,9 @@ struct NetworkDetailView: View {
             .pickerStyle(.segmented)
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
-            .onChange(of: selectedTab) { _ in NooberTheme.hapticLight() }
 
             Divider()
 
-            // Tab content
             Group {
                 switch selectedTab {
                 case 0: overviewTab
@@ -72,26 +73,19 @@ struct NetworkDetailView: View {
             }
             .animation(.easeInOut(duration: 0.15), value: selectedTab)
         }
-        .navigationTitle(request.path)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Menu {
-                    Button { showReplaySheet = true } label: { Label("Replay", systemImage: "arrow.clockwise") }
-                    Button { RequestReplayer.replay(from: request) } label: { Label("Quick Replay", systemImage: "paperplane") }
-                    Divider()
-                    Button { showCreateMockSheet = true } label: { Label("Create Mock Rule", systemImage: "wand.and.rays") }
-                    Button { showCreateInterceptSheet = true } label: { Label("Create Intercept Rule", systemImage: "hand.raised") }
-                    Divider()
-                    Button { copyFullDetails() } label: { Label("Copy Details", systemImage: "doc.on.doc") }
-                    Button { copyCurl() } label: { Label("Copy cURL", systemImage: "terminal") }
-                    Button { shareRequest() } label: { Label("Share", systemImage: "square.and.arrow.up") }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                        .font(.system(size: 18))
-                        .foregroundColor(NooberTheme.accent)
-                }
-            }
+        .nooberNavigationBarTitle(request.path)
+        .navigationBarItems(trailing: moreButton)
+        .actionSheet(isPresented: $showActionSheet) {
+            ActionSheet(title: Text("Actions"), buttons: [
+                .default(Text("Replay")) { showReplaySheet = true },
+                .default(Text("Quick Replay")) { RequestReplayer.replay(from: request) },
+                .default(Text("Create Mock Rule")) { showCreateMockSheet = true },
+                .default(Text("Create Intercept Rule")) { showCreateInterceptSheet = true },
+                .default(Text("Copy Details")) { copyFullDetails() },
+                .default(Text("Copy cURL")) { copyCurl() },
+                .default(Text("Share")) { shareRequest() },
+                .cancel()
+            ])
         }
         .sheet(isPresented: $showReplaySheet) {
             ReplayEditView(request: request)
@@ -104,11 +98,39 @@ struct NetworkDetailView: View {
         }
     }
 
+    // MARK: - More Button
+
+    @ViewBuilder
+    private var moreButton: some View {
+        if #available(iOS 14, *) {
+            Menu {
+                Button { showReplaySheet = true } label: { NooberLabel("Replay", systemImage: "arrow.clockwise") }
+                Button { RequestReplayer.replay(from: request) } label: { NooberLabel("Quick Replay", systemImage: "paperplane") }
+                Divider()
+                Button { showCreateMockSheet = true } label: { NooberLabel("Create Mock Rule", systemImage: "wand.and.rays") }
+                Button { showCreateInterceptSheet = true } label: { NooberLabel("Create Intercept Rule", systemImage: "hand.raised") }
+                Divider()
+                Button { copyFullDetails() } label: { NooberLabel("Copy Details", systemImage: "doc.on.doc") }
+                Button { copyCurl() } label: { NooberLabel("Copy cURL", systemImage: "terminal") }
+                Button { shareRequest() } label: { NooberLabel("Share", systemImage: "square.and.arrow.up") }
+            } label: {
+                Image(systemName: "ellipsis.circle")
+                    .font(.system(size: 18))
+                    .foregroundColor(NooberTheme.accent)
+            }
+        } else {
+            Button { showActionSheet = true } label: {
+                Image(systemName: "ellipsis.circle")
+                    .font(.system(size: 18))
+                    .foregroundColor(NooberTheme.accent)
+            }
+        }
+    }
+
     // MARK: - Header Card
 
     private var headerCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Badges row
             HStack(spacing: 6) {
                 MethodBadge(method: request.method)
                 StatusBadge(statusCode: request.statusCode, category: request.statusCodeCategory)
@@ -120,14 +142,12 @@ struct NetworkDetailView: View {
                     .foregroundColor(.secondary)
             }
 
-            // URL
             Text(request.url)
                 .font(.system(size: 11, design: .monospaced))
                 .foregroundColor(.primary.opacity(0.8))
                 .lineLimit(2)
-                .textSelection(.enabled)
+                .nooberTextSelection()
 
-            // Mock / Rewrite indicators
             if request.isMocked {
                 HStack(spacing: 4) {
                     Image(systemName: "wand.and.rays").font(.system(size: 11))
@@ -169,7 +189,6 @@ struct NetworkDetailView: View {
                 .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(NooberTheme.rewrite.opacity(0.1)))
             }
 
-            // Error
             if let error = request.errorDescription {
                 HStack(spacing: 4) {
                     Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 11))
@@ -182,7 +201,7 @@ struct NetworkDetailView: View {
             }
         }
         .padding(14)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color(.secondarySystemBackground))
     }
 
     // MARK: - Overview Tab
@@ -232,7 +251,6 @@ struct NetworkDetailView: View {
     private var requestTab: some View {
         ScrollView {
             VStack(spacing: 0) {
-                // Request Headers
                 let headers = filteredHeaders(request.requestHeaders)
                 detailSection("Request Headers (\(request.requestHeaders.count))") {
                     if request.requestHeaders.isEmpty {
@@ -248,7 +266,6 @@ struct NetworkDetailView: View {
                     }
                 }
 
-                // Request Body
                 detailSection("Request Body") {
                     if let body = request.requestBody, !body.isEmpty {
                         bodyContent(
@@ -269,7 +286,6 @@ struct NetworkDetailView: View {
     private var responseTab: some View {
         ScrollView {
             VStack(spacing: 0) {
-                // Image preview
                 if request.isImage, let img = request.responseImage, searchText.isEmpty {
                     detailSection("Image Preview") {
                         Image(uiImage: img)
@@ -279,7 +295,7 @@ struct NetworkDetailView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                    .stroke(Color(uiColor: .separator), lineWidth: 0.5)
+                                    .stroke(Color(.separator), lineWidth: 0.5)
                             )
                             .padding(.vertical, 4)
 
@@ -287,7 +303,6 @@ struct NetworkDetailView: View {
                     }
                 }
 
-                // Response Headers
                 let headers = filteredHeaders(request.responseHeaders)
                 detailSection("Response Headers (\(request.responseHeaders.count))") {
                     if request.responseHeaders.isEmpty {
@@ -303,7 +318,6 @@ struct NetworkDetailView: View {
                     }
                 }
 
-                // Response Body
                 detailSection("Response Body") {
                     if let body = request.responseBody, !body.isEmpty {
                         if request.isImage {
@@ -356,11 +370,10 @@ struct NetworkDetailView: View {
                     Text(curlCommand)
                         .font(.system(size: 12, design: .monospaced))
                         .foregroundColor(NooberTheme.success)
-                        .textSelection(.enabled)
+                        .nooberTextSelection()
                         .padding(16)
                 }
             } else {
-                // Highlight matching lines in cURL
                 let lines = curlCommand.components(separatedBy: "\n")
                 let matched = lines.filter { $0.localizedCaseInsensitiveContains(searchText) }
                 if matched.isEmpty {
@@ -386,7 +399,6 @@ struct NetworkDetailView: View {
 
     private func bodyContent(data: Data, prettyText: String, kvItems: [JSONFlattener.KeyValue]) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Top bar: view mode picker + copy button
             HStack(spacing: 8) {
                 // Only show List/Raw picker if we have KV items (i.e., it's valid JSON)
                 if !kvItems.isEmpty {
@@ -416,7 +428,6 @@ struct NetworkDetailView: View {
                 }
             }
 
-            // Content based on view mode
             if bodyViewMode == .list && !kvItems.isEmpty {
                 keyValueListView(items: kvItems)
             } else {
@@ -443,7 +454,6 @@ struct NetworkDetailView: View {
             if filtered.isEmpty && !searchText.isEmpty {
                 noResultsLabel
             } else {
-                // Show count
                 Text("\(filtered.count) field\(filtered.count == 1 ? "" : "s")")
                     .font(.system(size: 10, weight: .medium))
                     .foregroundColor(.secondary)
@@ -458,10 +468,8 @@ struct NetworkDetailView: View {
 
     private func kvRow(item: JSONFlattener.KeyValue) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            // Key with indentation based on depth
             HStack(spacing: 0) {
                 if item.depth > 0 {
-                    // Visual indentation
                     ForEach(0..<item.depth, id: \.self) { _ in
                         Rectangle()
                             .fill(NooberTheme.accent.opacity(0.15))
@@ -492,7 +500,7 @@ struct NetworkDetailView: View {
                     } else {
                         Text(item.value)
                             .font(.system(size: 11, design: .monospaced))
-                            .foregroundColor(Color(uiColor: .tertiaryLabel))
+                            .foregroundColor(Color(.tertiaryLabel))
                     }
                 }
 
@@ -512,9 +520,7 @@ struct NetworkDetailView: View {
                 ? NooberTheme.success.opacity(0.08)
                 : Color.clear
         )
-        .overlay(alignment: .bottom) {
-            Divider().padding(.leading, CGFloat(item.depth) * 10)
-        }
+        .overlay(Divider().padding(.leading, CGFloat(item.depth) * 10), alignment: .bottom)
     }
 
     // MARK: - Raw Body View
@@ -543,13 +549,12 @@ struct NetworkDetailView: View {
                         Text(prettyText)
                             .font(.system(size: 11, design: .monospaced))
                             .foregroundColor(.primary.opacity(0.9))
-                            .textSelection(.enabled)
+                            .nooberTextSelection()
                     }
                     .frame(maxHeight: isBodyExpanded ? .infinity : 400)
                 }
             }
 
-            // Show expand/collapse only when content is large enough to be clipped
             if prettyText.components(separatedBy: "\n").count > 15 {
                 Button {
                     withAnimation(.easeInOut(duration: 0.2)) {
@@ -617,12 +622,10 @@ struct NetworkDetailView: View {
         var currentIndex = text.startIndex
 
         for range in ranges {
-            // Text before match
             if currentIndex < range.lowerBound {
                 let before = String(text[currentIndex..<range.lowerBound])
                 result = result + Text(before).foregroundColor(.primary.opacity(0.7))
             }
-            // Matched text
             let matched = String(text[range])
             result = result + Text(matched)
                 .foregroundColor(NooberTheme.accent)
@@ -631,7 +634,6 @@ struct NetworkDetailView: View {
             currentIndex = range.upperBound
         }
 
-        // Remaining text
         if currentIndex < text.endIndex {
             let remaining = String(text[currentIndex...])
             result = result + Text(remaining).foregroundColor(.primary.opacity(0.7))
@@ -659,7 +661,7 @@ struct NetworkDetailView: View {
 
             highlightedText(value, query: searchText)
                 .font(.system(size: 12, design: .monospaced))
-                .textSelection(.enabled)
+                .nooberTextSelection()
 
             Spacer(minLength: 0)
         }
@@ -676,7 +678,7 @@ struct NetworkDetailView: View {
     private func valueColor(_ value: String) -> Color {
         switch value.lowercased() {
         case "null":
-            return Color(uiColor: .tertiaryLabel)
+            return Color(.tertiaryLabel)
         case "true":
             return NooberTheme.success
         case "false":
@@ -698,7 +700,7 @@ struct NetworkDetailView: View {
             Text("No results for \"\(searchText)\"")
                 .font(.system(size: 13))
         }
-        .foregroundColor(Color(uiColor: .tertiaryLabel))
+        .foregroundColor(Color(.tertiaryLabel))
         .frame(maxWidth: .infinity, alignment: .center)
         .padding(.vertical, 12)
     }
@@ -710,17 +712,16 @@ struct NetworkDetailView: View {
             Text("No matches for \"\(searchText)\"")
                 .font(.system(size: 14, weight: .medium))
         }
-        .foregroundColor(Color(uiColor: .tertiaryLabel))
+        .foregroundColor(Color(.tertiaryLabel))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.top, 40)
     }
 
     private func detailSection<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(title)
+            Text(title.uppercased())
                 .font(.system(size: 12, weight: .bold))
                 .foregroundColor(NooberTheme.accent)
-                .textCase(.uppercase)
                 .padding(.horizontal, 16)
                 .padding(.top, 16)
                 .padding(.bottom, 8)
@@ -745,7 +746,7 @@ struct NetworkDetailView: View {
             Text(value)
                 .font(.system(size: 12, design: .monospaced))
                 .foregroundColor(.primary)
-                .textSelection(.enabled)
+                .nooberTextSelection()
 
             Spacer(minLength: 0)
         }
@@ -760,7 +761,7 @@ struct NetworkDetailView: View {
     private func emptyLabel(_ text: String) -> some View {
         Text(text)
             .font(.system(size: 13))
-            .foregroundColor(Color(uiColor: .tertiaryLabel))
+            .foregroundColor(Color(.tertiaryLabel))
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.vertical, 8)
     }
@@ -846,18 +847,15 @@ enum CURLGenerator {
     static func generate(from req: NetworkRequestModel) -> String {
         var parts = ["curl"]
 
-        // Method
         if req.method != "GET" {
             parts.append("-X \(req.method)")
         }
 
-        // Headers
         for (key, value) in req.requestHeaders.sorted(by: { $0.key < $1.key }) {
             let escaped = value.replacingOccurrences(of: "'", with: "'\\''")
             parts.append("-H '\(key): \(escaped)'")
         }
 
-        // Body
         if let body = req.requestBody, !body.isEmpty {
             if let bodyString = String(data: body, encoding: .utf8) {
                 let escaped = bodyString.replacingOccurrences(of: "'", with: "'\\''")
@@ -865,7 +863,6 @@ enum CURLGenerator {
             }
         }
 
-        // URL
         let escapedURL = req.url.replacingOccurrences(of: "'", with: "'\\''")
         parts.append("'\(escapedURL)'")
 

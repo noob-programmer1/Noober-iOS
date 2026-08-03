@@ -1,10 +1,13 @@
 import SwiftUI
+import Combine
 
 struct FloatingBubbleView: View {
 
     let onTap: () -> Void
 
-    @StateObject private var store = NetworkActivityStore.shared
+    @ObservedObject private var store = NetworkActivityStore.shared
+    @State private var lastSeenPulseID: UInt = NetworkActivityStore.shared.pulseID
+    @State private var lastSeenActiveRequestCount: Int = NetworkActivityStore.shared.activeRequestCount
 
     // MARK: - Drag state
 
@@ -45,10 +48,8 @@ struct FloatingBubbleView: View {
                         }
                         .onEnded { value in
                             if !isDragging {
-                                // It was a tap
                                 onTap()
                             } else {
-                                // Snap to edge
                                 let screenWidth = geometry.size.width
                                 let snappedX = position.x < screenWidth / 2
                                     ? (size / 2 + 4)
@@ -65,10 +66,14 @@ struct FloatingBubbleView: View {
                             isDragging = false
                         }
                 )
-                .onChange(of: store.pulseID) { _ in
+                .onReceive(store.$pulseID) { newValue in
+                    guard newValue != lastSeenPulseID else { return }
+                    lastSeenPulseID = newValue
                     triggerPulse()
                 }
-                .onChange(of: store.activeRequestCount) { count in
+                .onReceive(store.$activeRequestCount) { count in
+                    guard count != lastSeenActiveRequestCount else { return }
+                    lastSeenActiveRequestCount = count
                     withAnimation(.spring(response: 0.3)) {
                         requestCountBadge = count
                         showBadge = count > 0
@@ -84,28 +89,25 @@ struct FloatingBubbleView: View {
                     }
                 }
         }
-        .ignoresSafeArea()
+        .edgesIgnoringSafeArea(.all)
     }
 
     // MARK: - Bubble content
 
     private var bubbleContent: some View {
         ZStack {
-            // Outer pulse ring
             Circle()
                 .stroke(ringColor, lineWidth: 2.5)
                 .frame(width: size, height: size)
                 .scaleEffect(ringScale)
                 .opacity(ringOpacity)
 
-            // Glow layer
             Circle()
                 .fill(ringColor)
                 .frame(width: size, height: size)
                 .blur(radius: 12)
                 .opacity(glowOpacity)
 
-            // Main bubble
             Circle()
                 .fill(
                     LinearGradient(
@@ -142,7 +144,6 @@ struct FloatingBubbleView: View {
                     y: isDragging ? 6 : 4
                 )
 
-            // Request count badge
             if showBadge && requestCountBadge > 0 {
                 Text(requestCountBadge > 99 ? "99+" : "\(requestCountBadge)")
                     .font(.system(size: 10, weight: .bold, design: .rounded))
@@ -154,7 +155,6 @@ struct FloatingBubbleView: View {
                     .transition(.scale.combined(with: .opacity))
             }
 
-            // Recording indicator — red pulsing dot
             if FlowRecorder.shared.isRecording {
                 ZStack {
                     Circle()

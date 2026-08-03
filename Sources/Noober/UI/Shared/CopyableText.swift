@@ -43,7 +43,7 @@ struct CopyableText: View {
             ScrollView([.horizontal, .vertical], showsIndicators: true) {
                 Text(text)
                     .font(.system(size: 12, design: .monospaced))
-                    .textSelection(.enabled)
+                    .nooberTextSelection()
                     .padding(.horizontal, 16)
                     .padding(.bottom, 16)
             }

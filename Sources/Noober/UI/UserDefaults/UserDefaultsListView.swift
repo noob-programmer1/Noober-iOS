@@ -8,6 +8,7 @@ struct UserDefaultsListView: View {
     @State private var editingEntry: UserDefaultsEntry?
     @State private var showAddSheet = false
     @State private var showClearAlert = false
+    @State private var showActionSheet = false
     @State private var copiedKey: String?
 
     private var filtered: [UserDefaultsEntry] {
@@ -20,13 +21,11 @@ struct UserDefaultsListView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Search bar
             NooberSearchBar(text: $searchText, placeholder: "Search keys, values...")
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
                 .padding(.bottom, 4)
 
-            // Stats bar
             statsBar
 
             Divider()
@@ -46,33 +45,55 @@ struct UserDefaultsListView: View {
         .sheet(item: $editingEntry) { entry in
             UserDefaultsEditView(store: store, existingEntry: entry)
         }
-        .alert("Clear All UserDefaults?", isPresented: $showClearAlert) {
-            Button("Cancel", role: .cancel) {}
-            Button("Clear All", role: .destructive) { store.clearAll() }
-        } message: {
-            Text("This will remove all non-system UserDefaults entries. This cannot be undone.")
+        .alert(isPresented: $showClearAlert) {
+            Alert(
+                title: Text("Clear All UserDefaults?"),
+                message: Text("This will remove all non-system UserDefaults entries. This cannot be undone."),
+                primaryButton: .destructive(Text("Clear All")) { store.clearAll() },
+                secondaryButton: .cancel()
+            )
         }
-        .toolbar {
-            ToolbarItemGroup(placement: .navigationBarTrailing) {
-                Menu {
-                    Button { showAddSheet = true } label: {
-                        Label("Add Entry", systemImage: "plus")
-                    }
-                    Button { store.shareExport() } label: {
-                        Label("Export JSON", systemImage: "square.and.arrow.up")
-                    }
-                    Divider()
-                    Toggle("Show System Keys", isOn: $store.showSystemKeys)
-                    Divider()
-                    Button(role: .destructive) { showClearAlert = true } label: {
-                        Label("Clear All", systemImage: "trash")
-                    }
-                    .disabled(store.entries.isEmpty)
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                        .font(.system(size: 18))
-                        .foregroundColor(NooberTheme.accent)
+        .navigationBarItems(trailing: moreButton)
+    }
+
+    // MARK: - More Button
+
+    @ViewBuilder
+    private var moreButton: some View {
+        if #available(iOS 14, *) {
+            Menu {
+                Button { showAddSheet = true } label: {
+                    NooberLabel("Add Entry", systemImage: "plus")
                 }
+                Button { store.shareExport() } label: {
+                    NooberLabel("Export JSON", systemImage: "square.and.arrow.up")
+                }
+                Divider()
+                Toggle("Show System Keys", isOn: $store.showSystemKeys)
+                Divider()
+                NooberDestructiveButton("Clear All", systemImage: "trash") { showClearAlert = true }
+                    .disabled(store.entries.isEmpty)
+            } label: {
+                Image(systemName: "ellipsis.circle")
+                    .font(.system(size: 18))
+                    .foregroundColor(NooberTheme.accent)
+            }
+        } else {
+            Button { showActionSheet = true } label: {
+                Image(systemName: "ellipsis.circle")
+                    .font(.system(size: 18))
+                    .foregroundColor(NooberTheme.accent)
+            }
+            .actionSheet(isPresented: $showActionSheet) {
+                ActionSheet(title: Text("Actions"), buttons: [
+                    .default(Text("Add Entry")) { showAddSheet = true },
+                    .default(Text("Export JSON")) { store.shareExport() },
+                    .default(Text(store.showSystemKeys ? "Hide System Keys" : "Show System Keys")) {
+                        store.showSystemKeys.toggle()
+                    },
+                    .destructive(Text("Clear All")) { showClearAlert = true },
+                    .cancel()
+                ])
             }
         }
     }
@@ -126,7 +147,7 @@ struct UserDefaultsListView: View {
                     .onTapGesture { editingEntry = entry }
                     .contextMenu {
                         Button { editingEntry = entry } label: {
-                            Label("Edit", systemImage: "pencil")
+                            NooberLabel("Edit", systemImage: "pencil")
                         }
                         Button {
                             UIPasteboard.general.string = "\(entry.key): \(entry.displayValue)"
@@ -136,23 +157,17 @@ struct UserDefaultsListView: View {
                                 withAnimation { copiedKey = nil }
                             }
                         } label: {
-                            Label("Copy", systemImage: "doc.on.doc")
+                            NooberLabel("Copy", systemImage: "doc.on.doc")
                         }
                         Button { store.duplicateEntry(entry) } label: {
-                            Label("Duplicate", systemImage: "plus.square.on.square")
+                            NooberLabel("Duplicate", systemImage: "plus.square.on.square")
                         }
                         Divider()
-                        Button(role: .destructive) { store.deleteEntry(entry) } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
+                        NooberDestructiveButton("Delete", systemImage: "trash") { store.deleteEntry(entry) }
                     }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                        Button(role: .destructive) {
-                            NooberTheme.hapticMedium()
-                            store.deleteEntry(entry)
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
+                    .nooberSwipeAction(edge: .trailing, isDestructive: true, allowsFullSwipe: true, label: "Delete", systemImage: "trash") {
+                        NooberTheme.hapticMedium()
+                        store.deleteEntry(entry)
                     }
             }
         }
@@ -166,18 +181,18 @@ struct UserDefaultsListView: View {
             Spacer()
             ZStack {
                 Circle()
-                    .fill(Color(uiColor: .tertiarySystemFill))
+                    .fill(Color(.tertiarySystemFill))
                     .frame(width: 80, height: 80)
                 Image(systemName: "externaldrive")
                     .font(.system(size: 32, weight: .thin))
-                    .foregroundColor(Color(uiColor: .tertiaryLabel))
+                    .foregroundColor(Color(.tertiaryLabel))
             }
             Text("No UserDefaults")
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(.secondary)
             Text("Entries will appear here once\nyour app writes to UserDefaults.")
                 .font(.system(size: 14))
-                .foregroundColor(Color(uiColor: .tertiaryLabel))
+                .foregroundColor(Color(.tertiaryLabel))
                 .multilineTextAlignment(.center)
             Button { showAddSheet = true } label: {
                 Text("Add Entry")
@@ -197,7 +212,7 @@ struct UserDefaultsListView: View {
             Spacer()
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 28, weight: .thin))
-                .foregroundColor(Color(uiColor: .tertiaryLabel))
+                .foregroundColor(Color(.tertiaryLabel))
             Text("No results for \"\(searchText)\"")
                 .font(.system(size: 15, weight: .medium))
                 .foregroundColor(.secondary)
@@ -215,7 +230,6 @@ private struct UserDefaultsRowView: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            // Color strip
             RoundedRectangle(cornerRadius: 2)
                 .fill(NooberTheme.userDefaultsTypeColor(entry.valueType))
                 .frame(width: 3, height: 38)
@@ -249,7 +263,7 @@ private struct UserDefaultsRowView: View {
             } else {
                 Image(systemName: "chevron.right")
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(Color(uiColor: .tertiaryLabel))
+                    .foregroundColor(Color(.tertiaryLabel))
             }
         }
         .padding(.vertical, 4)

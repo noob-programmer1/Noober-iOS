@@ -3,7 +3,7 @@ import SwiftUI
 struct ReplayEditView: View {
 
     let request: NetworkRequestModel
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.presentationMode) private var presentationMode
 
     @State private var url: String = ""
     @State private var method: String = "GET"
@@ -18,7 +18,6 @@ struct ReplayEditView: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    // Method
                     sectionHeader("Method")
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
@@ -44,43 +43,41 @@ struct ReplayEditView: View {
                         .padding(.horizontal, 16)
                     }
 
-                    // URL
                     sectionHeader("URL")
                     TextField("https://...", text: $url)
                         .font(.system(size: 13, design: .monospaced))
                         .textFieldStyle(.plain)
-                        .textInputAutocapitalization(.never)
+                        .autocapitalization(.none)
                         .disableAutocorrection(true)
                         .padding(10)
                         .background(
                             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .fill(Color(uiColor: .tertiarySystemFill))
+                                .fill(Color(.tertiarySystemFill))
                         )
                         .padding(.horizontal, 16)
 
-                    // Headers
                     sectionHeader("Headers (\(headers.count))")
                     VStack(spacing: 8) {
                         ForEach(Array(headers.enumerated()), id: \.offset) { index, _ in
                             HStack(spacing: 8) {
                                 TextField("Key", text: $headers[index].key)
                                     .font(.system(size: 12, design: .monospaced))
-                                    .textInputAutocapitalization(.never)
+                                    .autocapitalization(.none)
                                     .disableAutocorrection(true)
                                     .padding(8)
                                     .background(
                                         RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                            .fill(Color(uiColor: .tertiarySystemFill))
+                                            .fill(Color(.tertiarySystemFill))
                                     )
 
                                 TextField("Value", text: $headers[index].value)
                                     .font(.system(size: 12, design: .monospaced))
-                                    .textInputAutocapitalization(.never)
+                                    .autocapitalization(.none)
                                     .disableAutocorrection(true)
                                     .padding(8)
                                     .background(
                                         RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                            .fill(Color(uiColor: .tertiarySystemFill))
+                                            .fill(Color(.tertiarySystemFill))
                                     )
 
                                 Button {
@@ -107,25 +104,24 @@ struct ReplayEditView: View {
                     }
                     .padding(.horizontal, 16)
 
-                    // Body
                     if method != "GET" && method != "HEAD" {
                         sectionHeader("Body")
                         ZStack(alignment: .topLeading) {
                             if bodyText.isEmpty {
                                 Text("Request body...")
                                     .font(.system(size: 13, design: .monospaced))
-                                    .foregroundColor(Color(uiColor: .placeholderText))
+                                    .foregroundColor(Color(.placeholderText))
                                     .padding(.top, 12)
                                     .padding(.leading, 14)
                             }
-                            TextEditor(text: $bodyText)
+                            NooberTextEditor(text: $bodyText)
                                 .font(.system(size: 13, design: .monospaced))
                                 .frame(minHeight: 120)
                                 .padding(4)
                         }
                         .background(
                             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .fill(Color(uiColor: .tertiarySystemFill))
+                                .fill(Color(.tertiarySystemFill))
                         )
                         .padding(.horizontal, 16)
                     }
@@ -134,33 +130,28 @@ struct ReplayEditView: View {
                 }
                 .padding(.top, 8)
             }
-            .background(Color(uiColor: .systemGroupedBackground))
-            .navigationTitle("Replay Request")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
-                        .foregroundColor(.secondary)
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        sendRequest()
-                    } label: {
-                        HStack(spacing: 4) {
-                            if sent {
-                                Image(systemName: "checkmark")
-                                Text("Sent")
-                            } else {
-                                Image(systemName: "paperplane.fill")
-                                Text("Send")
-                            }
+            .background(Color(.systemGroupedBackground))
+            .nooberNavigationBarTitle("Replay Request")
+            .navigationBarItems(
+                leading: Button("Cancel") { presentationMode.wrappedValue.dismiss() }
+                    .foregroundColor(.secondary),
+                trailing: Button {
+                    sendRequest()
+                } label: {
+                    HStack(spacing: 4) {
+                        if sent {
+                            Image(systemName: "checkmark")
+                            Text("Sent")
+                        } else {
+                            Image(systemName: "paperplane.fill")
+                            Text("Send")
                         }
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(sent ? NooberTheme.success : NooberTheme.accent)
                     }
-                    .disabled(url.trimmingCharacters(in: .whitespaces).isEmpty || isSending)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(sent ? NooberTheme.success : NooberTheme.accent)
                 }
-            }
+                .disabled(url.trimmingCharacters(in: .whitespaces).isEmpty || isSending)
+            )
             .onAppear {
                 url = request.url
                 method = request.method
@@ -202,17 +193,16 @@ struct ReplayEditView: View {
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            dismiss()
+            presentationMode.wrappedValue.dismiss()
         }
     }
 
     // MARK: - Helpers
 
     private func sectionHeader(_ title: String) -> some View {
-        Text(title)
+        Text(title.uppercased())
             .font(.system(size: 12, weight: .bold))
             .foregroundColor(NooberTheme.accent)
-            .textCase(.uppercase)
             .padding(.horizontal, 16)
     }
 }

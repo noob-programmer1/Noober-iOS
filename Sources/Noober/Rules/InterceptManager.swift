@@ -16,7 +16,6 @@ enum InterceptManager: Sendable {
         pending[id] = (interceptor, tagged)
         lock.unlock()
 
-        // Post to UI
         let info = PendingIntercept(
             id: id,
             url: (tagged as URLRequest).url?.absoluteString ?? "unknown",
@@ -31,7 +30,6 @@ enum InterceptManager: Sendable {
 
         Task { @MainActor in
             PendingInterceptStore.shared.add(info)
-            // Auto-open debugger and switch to Rules tab
             NooberWindow.shared.showDebugger()
             NooberWindow.shared.selectTab(.rules)
         }
@@ -53,12 +51,10 @@ enum InterceptManager: Sendable {
 
         guard let (interceptor, tagged) = entry else { return }
 
-        // Apply modifications
         if let newURL = URL(string: url) {
             tagged.url = newURL
         }
         tagged.httpMethod = method
-        // Clear existing headers and set new ones
         if let existingHeaders = tagged.allHTTPHeaderFields {
             for key in existingHeaders.keys {
                 tagged.setValue(nil, forHTTPHeaderField: key)

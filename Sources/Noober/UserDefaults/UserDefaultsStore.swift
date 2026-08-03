@@ -61,7 +61,6 @@ final class UserDefaultsStore: ObservableObject {
 
     func duplicateEntry(_ entry: UserDefaultsEntry) {
         var newKey = entry.key + "_copy"
-        // Ensure uniqueness
         while UserDefaults.standard.object(forKey: newKey) != nil {
             newKey += "_copy"
         }
@@ -124,17 +123,13 @@ final class UserDefaultsStore: ObservableObject {
         let lower = string.lowercased().trimmingCharacters(in: .whitespaces)
         if lower == "true" { return true }
         if lower == "false" { return false }
-        // 2. Int
         if let intVal = Int(string) { return intVal }
-        // 3. Double
         if let doubleVal = Double(string), string.contains(".") { return doubleVal }
-        // 4. JSON (array or dictionary)
         if let data = string.data(using: .utf8),
            let json = try? JSONSerialization.jsonObject(with: data),
            JSONSerialization.isValidJSONObject(json) {
             return json
         }
-        // 5. Fallback: String
         return string
     }
 

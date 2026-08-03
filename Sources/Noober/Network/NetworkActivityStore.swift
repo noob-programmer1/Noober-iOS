@@ -62,13 +62,10 @@ final class NetworkActivityStore: ObservableObject {
 
     static let shared = NetworkActivityStore()
 
-    // HTTP
     @Published private(set) var requests: [NetworkRequestModel] = []
 
-    // WebSocket
     @Published private(set) var webSocketConnections: [WebSocketConnectionModel] = []
 
-    // Bubble animation signals
     @Published private(set) var pulseID: UInt = 0
     @Published private(set) var lastRequestSucceeded: Bool = true
     @Published private(set) var activeRequestCount: Int = 0
@@ -150,7 +147,6 @@ final class NetworkActivityStore: ObservableObject {
                 webSocketConnections[index].frames.count - maxWSFrames
             )
         }
-        // Move connection to top on activity
         let conn = webSocketConnections.remove(at: index)
         webSocketConnections.insert(conn, at: 0)
         pulseID &+= 1

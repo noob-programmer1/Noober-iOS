@@ -96,7 +96,6 @@ final class KeychainStore: ObservableObject {
         itemClass: KeychainEntry.ItemClass,
         originalEntry: KeychainEntry? = nil
     ) {
-        // Delete old entry if updating
         if let original = originalEntry {
             deleteEntry(original)
         }

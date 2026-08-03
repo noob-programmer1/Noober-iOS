@@ -133,11 +133,11 @@ struct LogListView: View {
 
             Text("\(filteredEntries.count) shown")
                 .font(.system(size: 11))
-                .foregroundColor(Color(uiColor: .tertiaryLabel))
+                .foregroundColor(Color(.tertiaryLabel))
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color(.secondarySystemBackground))
     }
 
     private func statsItem(count: Int, label: String, color: Color) -> some View {
@@ -149,7 +149,7 @@ struct LogListView: View {
     }
 
     private var statsItemDivider: some View {
-        Rectangle().fill(Color(uiColor: .separator)).frame(width: 1, height: 22).padding(.horizontal, 6)
+        Rectangle().fill(Color(.separator)).frame(width: 1, height: 22).padding(.horizontal, 6)
     }
 
     // MARK: - Entry List
@@ -161,13 +161,13 @@ struct LogListView: View {
                     LogRowView(entry: entry)
                 }
                 .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 16))
-                .listRowSeparator(.hidden)
+                .nooberHideRowSeparator()
                 .contextMenu {
                     Button {
                         UIPasteboard.general.string = entry.message
                         NooberTheme.hapticSuccess()
                     } label: {
-                        Label("Copy Message", systemImage: "doc.on.doc")
+                        NooberLabel("Copy Message", systemImage: "doc.on.doc")
                     }
                 }
             }
@@ -181,18 +181,18 @@ struct LogListView: View {
         VStack(spacing: 16) {
             Spacer()
             ZStack {
-                Circle().fill(Color(uiColor: .tertiarySystemFill)).frame(width: 80, height: 80)
+                Circle().fill(Color(.tertiarySystemFill)).frame(width: 80, height: 80)
                 Image(systemName: store.entries.isEmpty
                     ? "doc.text.magnifyingglass" : "line.3.horizontal.decrease")
                     .font(.system(size: 32, weight: .thin))
-                    .foregroundColor(Color(uiColor: .tertiaryLabel))
+                    .foregroundColor(Color(.tertiaryLabel))
             }
             Text(store.entries.isEmpty ? "No logs yet" : "No matching logs")
                 .font(.system(size: 17, weight: .semibold)).foregroundColor(.secondary)
             Text(store.entries.isEmpty
                 ? "Custom logs from your app\nwill appear here."
                 : "Try adjusting your search or filters.")
-                .font(.system(size: 14)).foregroundColor(Color(uiColor: .tertiaryLabel)).multilineTextAlignment(.center)
+                .font(.system(size: 14)).foregroundColor(Color(.tertiaryLabel)).multilineTextAlignment(.center)
             if activeFilterCount > 0 {
                 Button {
                     withAnimation {
@@ -226,41 +226,37 @@ private struct LogRowView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            // Level color strip
             RoundedRectangle(cornerRadius: 2)
                 .fill(NooberTheme.logLevelColor(entry.level))
                 .frame(width: 4)
                 .padding(.vertical, 4)
 
             VStack(alignment: .leading, spacing: 5) {
-                // Row 1: Level + Category + Time
                 HStack(spacing: 4) {
                     LogLevelBadge(level: entry.level)
                     TypeBadge(text: entry.category.rawValue.uppercased(), color: NooberTheme.logCategoryColor)
                     Spacer()
                     Text(Self.timeFormatter.string(from: entry.timestamp))
                         .font(.system(size: 10, design: .monospaced))
-                        .foregroundColor(Color(uiColor: .tertiaryLabel))
+                        .foregroundColor(Color(.tertiaryLabel))
                 }
 
-                // Row 2: Message
                 Text(entry.message)
                     .font(.system(size: 13))
                     .foregroundColor(.primary)
                     .lineLimit(2)
 
-                // Row 3: File:line
                 if !entry.file.isEmpty {
                     Text("\((entry.file as NSString).lastPathComponent):\(entry.line)")
                         .font(.system(size: 10, design: .monospaced))
-                        .foregroundColor(Color(uiColor: .tertiaryLabel))
+                        .foregroundColor(Color(.tertiaryLabel))
                 }
             }
             .padding(.leading, 10)
             .padding(.vertical, 8)
         }
         .padding(.leading, 16)
-        .overlay(alignment: .bottom) { Divider().padding(.leading, 30) }
+        .overlay(Divider().padding(.leading, 30), alignment: .bottom)
     }
 }
 

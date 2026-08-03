@@ -23,10 +23,10 @@ enum NooberTheme {
     // MARK: - Colors
 
     static let accent = Color(red: 0.25, green: 0.48, blue: 1.0)
-    static let background = Color(uiColor: .systemBackground)
-    static let secondaryBackground = Color(uiColor: .secondarySystemBackground)
-    static let tertiaryBackground = Color(uiColor: .tertiarySystemBackground)
-    static let separator = Color(uiColor: .separator)
+    static let background = Color(.systemBackground)
+    static let secondaryBackground = Color(.secondarySystemBackground)
+    static let tertiaryBackground = Color(.tertiarySystemBackground)
+    static let separator = Color(.separator)
 
     static let success = Color(red: 0.20, green: 0.78, blue: 0.35)
     static let warning = Color(red: 1.0, green: 0.62, blue: 0.04)
@@ -137,6 +137,18 @@ enum NooberTheme {
         switch itemClass {
         case .genericPassword:  return accent
         case .internetPassword: return webSocket
+        }
+    }
+}
+
+extension View {
+    /// Applies `.textSelection(.enabled)` on iOS 15+, no-op on older versions where the API doesn't exist.
+    @ViewBuilder
+    func nooberTextSelection() -> some View {
+        if #available(iOS 15, *) {
+            self.textSelection(.enabled)
+        } else {
+            self
         }
     }
 }

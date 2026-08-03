@@ -87,7 +87,7 @@ struct FilterChip: View {
                 .padding(.vertical, 7)
                 .background(
                     Capsule()
-                        .fill(isSelected ? NooberTheme.accent : Color(uiColor: .tertiarySystemFill))
+                        .fill(isSelected ? NooberTheme.accent : Color(.tertiarySystemFill))
                 )
         }
         .animation(.spring(response: 0.25), value: isSelected)

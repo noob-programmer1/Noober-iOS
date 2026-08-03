@@ -8,6 +8,7 @@ struct KeychainListView: View {
     @State private var editingEntry: KeychainEntry?
     @State private var showAddSheet = false
     @State private var showClearAlert = false
+    @State private var showActionSheet = false
     @State private var selectedClassFilter: KeychainEntry.ItemClass?
     @State private var revealedValue: (entry: KeychainEntry, value: String)?
     @State private var copiedKey: String?
@@ -15,12 +16,10 @@ struct KeychainListView: View {
     private var filtered: [KeychainEntry] {
         var result = store.entries
 
-        // Class filter
         if let classFilter = selectedClassFilter {
             result = result.filter { $0.itemClass == classFilter }
         }
 
-        // Search filter
         if !searchText.isEmpty {
             result = result.filter {
                 $0.account.localizedCaseInsensitiveContains(searchText) ||
@@ -42,13 +41,11 @@ struct KeychainListView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Search bar
             NooberSearchBar(text: $searchText, placeholder: "Search account, service...")
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
                 .padding(.bottom, 4)
 
-            // Filter chips
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     classFilterChip("All", count: store.entries.count, filter: nil)
@@ -76,43 +73,61 @@ struct KeychainListView: View {
         .sheet(item: $editingEntry) { entry in
             KeychainEditView(store: store, existingEntry: entry)
         }
-        .alert("Keychain Value", isPresented: Binding(
+        .alert(isPresented: Binding(
             get: { revealedValue != nil },
             set: { if !$0 { revealedValue = nil } }
         )) {
-            Button("Copy") {
-                if let val = revealedValue?.value {
-                    UIPasteboard.general.string = val
+            Alert(
+                title: Text("Keychain Value"),
+                message: Text(revealedValue.map { "\($0.entry.account)\n\n\($0.value)" } ?? ""),
+                primaryButton: .default(Text("Copy")) {
+                    if let val = revealedValue?.value {
+                        UIPasteboard.general.string = val
+                    }
+                },
+                secondaryButton: .cancel(Text("OK"))
+            )
+        }
+        .alert(isPresented: $showClearAlert) {
+            Alert(
+                title: Text("Clear All Keychain Items?"),
+                message: Text("This will remove all generic and internet password items. This cannot be undone."),
+                primaryButton: .destructive(Text("Clear All")) { store.clearAll() },
+                secondaryButton: .cancel()
+            )
+        }
+        .navigationBarItems(trailing: moreButton)
+    }
+
+    // MARK: - More Button
+
+    @ViewBuilder
+    private var moreButton: some View {
+        if #available(iOS 14, *) {
+            Menu {
+                Button { showAddSheet = true } label: {
+                    NooberLabel("Add Item", systemImage: "plus")
                 }
-            }
-            Button("OK", role: .cancel) {}
-        } message: {
-            if let rv = revealedValue {
-                Text("\(rv.entry.account)\n\n\(rv.value)")
-            }
-        }
-        .alert("Clear All Keychain Items?", isPresented: $showClearAlert) {
-            Button("Cancel", role: .cancel) {}
-            Button("Clear All", role: .destructive) { store.clearAll() }
-        } message: {
-            Text("This will remove all generic and internet password items. This cannot be undone.")
-        }
-        .toolbar {
-            ToolbarItemGroup(placement: .navigationBarTrailing) {
-                Menu {
-                    Button { showAddSheet = true } label: {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                    Divider()
-                    Button(role: .destructive) { showClearAlert = true } label: {
-                        Label("Clear All", systemImage: "trash")
-                    }
+                Divider()
+                NooberDestructiveButton("Clear All", systemImage: "trash") { showClearAlert = true }
                     .disabled(store.entries.isEmpty)
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                        .font(.system(size: 18))
-                        .foregroundColor(NooberTheme.accent)
-                }
+            } label: {
+                Image(systemName: "ellipsis.circle")
+                    .font(.system(size: 18))
+                    .foregroundColor(NooberTheme.accent)
+            }
+        } else {
+            Button { showActionSheet = true } label: {
+                Image(systemName: "ellipsis.circle")
+                    .font(.system(size: 18))
+                    .foregroundColor(NooberTheme.accent)
+            }
+            .actionSheet(isPresented: $showActionSheet) {
+                ActionSheet(title: Text("Actions"), buttons: [
+                    .default(Text("Add Item")) { showAddSheet = true },
+                    .destructive(Text("Clear All")) { showClearAlert = true },
+                    .cancel()
+                ])
             }
         }
     }
@@ -135,7 +150,7 @@ struct KeychainListView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background(
-                Capsule().fill(isSelected ? NooberTheme.accent : Color(uiColor: .tertiarySystemFill))
+                Capsule().fill(isSelected ? NooberTheme.accent : Color(.tertiarySystemFill))
             )
         }
     }
@@ -153,10 +168,10 @@ struct KeychainListView: View {
                             let val = store.retrieveValue(for: entry) ?? "(unable to read)"
                             revealedValue = (entry, val)
                         } label: {
-                            Label("View Value", systemImage: "eye")
+                            NooberLabel("View Value", systemImage: "eye")
                         }
                         Button { editingEntry = entry } label: {
-                            Label("Edit", systemImage: "pencil")
+                            NooberLabel("Edit", systemImage: "pencil")
                         }
                         Button {
                             let val = store.retrieveValue(for: entry) ?? ""
@@ -167,20 +182,14 @@ struct KeychainListView: View {
                                 withAnimation { copiedKey = nil }
                             }
                         } label: {
-                            Label("Copy Value", systemImage: "doc.on.doc")
+                            NooberLabel("Copy Value", systemImage: "doc.on.doc")
                         }
                         Divider()
-                        Button(role: .destructive) { store.deleteEntry(entry) } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
+                        NooberDestructiveButton("Delete", systemImage: "trash") { store.deleteEntry(entry) }
                     }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                        Button(role: .destructive) {
-                            NooberTheme.hapticMedium()
-                            store.deleteEntry(entry)
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
+                    .nooberSwipeAction(edge: .trailing, isDestructive: true, allowsFullSwipe: true, label: "Delete", systemImage: "trash") {
+                        NooberTheme.hapticMedium()
+                        store.deleteEntry(entry)
                     }
             }
         }
@@ -194,18 +203,18 @@ struct KeychainListView: View {
             Spacer()
             ZStack {
                 Circle()
-                    .fill(Color(uiColor: .tertiarySystemFill))
+                    .fill(Color(.tertiarySystemFill))
                     .frame(width: 80, height: 80)
                 Image(systemName: "key")
                     .font(.system(size: 32, weight: .thin))
-                    .foregroundColor(Color(uiColor: .tertiaryLabel))
+                    .foregroundColor(Color(.tertiaryLabel))
             }
             Text("No Keychain Items")
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(.secondary)
             Text("Generic and Internet password items\nwill appear here.")
                 .font(.system(size: 14))
-                .foregroundColor(Color(uiColor: .tertiaryLabel))
+                .foregroundColor(Color(.tertiaryLabel))
                 .multilineTextAlignment(.center)
             Button { showAddSheet = true } label: {
                 Text("Add Item")
@@ -225,7 +234,7 @@ struct KeychainListView: View {
             Spacer()
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 28, weight: .thin))
-                .foregroundColor(Color(uiColor: .tertiaryLabel))
+                .foregroundColor(Color(.tertiaryLabel))
             Text("No results")
                 .font(.system(size: 15, weight: .medium))
                 .foregroundColor(.secondary)
@@ -243,7 +252,6 @@ private struct KeychainRowView: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            // Color strip
             RoundedRectangle(cornerRadius: 2)
                 .fill(NooberTheme.keychainClassColor(entry.itemClass))
                 .frame(width: 3, height: 44)
@@ -270,10 +278,10 @@ private struct KeychainRowView: View {
                     if !entry.modifiedText.isEmpty {
                         Text("·")
                             .font(.system(size: 11))
-                            .foregroundColor(Color(uiColor: .tertiaryLabel))
+                            .foregroundColor(Color(.tertiaryLabel))
                         Text(entry.modifiedText)
                             .font(.system(size: 10))
-                            .foregroundColor(Color(uiColor: .tertiaryLabel))
+                            .foregroundColor(Color(.tertiaryLabel))
                     }
                 }
             }
@@ -288,7 +296,7 @@ private struct KeychainRowView: View {
             } else {
                 Image(systemName: "chevron.right")
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(Color(uiColor: .tertiaryLabel))
+                    .foregroundColor(Color(.tertiaryLabel))
             }
         }
         .padding(.vertical, 4)

@@ -5,8 +5,8 @@ struct QAFailReportSheet: View {
     let item: QAChecklistResult
     @ObservedObject var store: QAChecklistStore
 
-    @Environment(\.dismiss) private var dismiss
-    @StateObject private var networkStore = NetworkActivityStore.shared
+    @Environment(\.presentationMode) private var presentationMode
+    @ObservedObject private var networkStore = NetworkActivityStore.shared
 
     @State private var failNotes = ""
     @State private var selectedRequestIds: Set<UUID> = []
@@ -19,19 +19,14 @@ struct QAFailReportSheet: View {
                 Divider()
                 apiCallPicker
             }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
-                        .foregroundColor(.secondary)
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Submit") { submitFail() }
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(NooberTheme.error)
-                }
-            }
-            .navigationTitle("Report Failure")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarItems(
+                leading: Button("Cancel") { presentationMode.wrappedValue.dismiss() }
+                    .foregroundColor(.secondary),
+                trailing: Button("Submit") { submitFail() }
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(NooberTheme.error)
+            )
+            .nooberNavigationBarTitle("Report Failure")
         }
         .navigationViewStyle(.stack)
         .onAppear { autoSelectRequests() }
@@ -64,7 +59,7 @@ struct QAFailReportSheet: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color(.secondarySystemBackground))
     }
 
     // MARK: - Notes
@@ -76,17 +71,17 @@ struct QAFailReportSheet: View {
                 .foregroundColor(NooberTheme.accent)
                 .padding(.horizontal, 4)
 
-            TextEditor(text: $failNotes)
+            NooberTextEditor(text: $failNotes)
                 .font(.system(size: 14))
                 .frame(minHeight: 80, maxHeight: 120)
                 .padding(8)
                 .background(
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(Color(uiColor: .tertiarySystemFill))
+                        .fill(Color(.tertiarySystemFill))
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .stroke(Color(uiColor: .separator), lineWidth: 0.5)
+                        .stroke(Color(.separator), lineWidth: 0.5)
                 )
         }
         .padding(16)
@@ -111,12 +106,12 @@ struct QAFailReportSheet: View {
             if networkStore.requests.isEmpty {
                 Text("No network requests captured yet.")
                     .font(.system(size: 13))
-                    .foregroundColor(Color(uiColor: .tertiaryLabel))
+                    .foregroundColor(Color(.tertiaryLabel))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 24)
             } else {
                 ScrollView {
-                    LazyVStack(spacing: 0) {
+                    NooberLazyVStack(spacing: 0) {
                         ForEach(networkStore.requests) { request in
                             apiCallRow(request)
                             Divider().padding(.leading, 42)
@@ -140,7 +135,7 @@ struct QAFailReportSheet: View {
             HStack(spacing: 10) {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 20))
-                    .foregroundColor(isSelected ? NooberTheme.accent : Color(uiColor: .tertiaryLabel))
+                    .foregroundColor(isSelected ? NooberTheme.accent : Color(.tertiaryLabel))
 
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 6) {
@@ -163,7 +158,7 @@ struct QAFailReportSheet: View {
                         .lineLimit(1)
                     Text(request.host)
                         .font(.system(size: 10))
-                        .foregroundColor(Color(uiColor: .tertiaryLabel))
+                        .foregroundColor(Color(.tertiaryLabel))
                 }
             }
             .padding(.horizontal, 16)
@@ -218,6 +213,6 @@ struct QAFailReportSheet: View {
             notes: failNotes,
             requestIds: Array(selectedRequestIds)
         )
-        dismiss()
+        presentationMode.wrappedValue.dismiss()
     }
 }

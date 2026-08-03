@@ -32,6 +32,7 @@ final class NooberWindow {
 
     private var overlayWindow: BubbleWindow?
     private var debuggerWindow: UIWindow?
+    private var tabDismissTargets: [ClosureAction] = []
 
     private(set) var isDebuggerShowing = false
 
@@ -53,7 +54,6 @@ final class NooberWindow {
 
         let bubbleView = FloatingBubbleView { [weak self] in
             if FlowRecorder.shared.isRecording {
-                // Tap during recording → stop recording and show AI Flows tab
                 FlowRecorder.shared.stopRecording()
                 self?.showDebugger(tab: .more)
             } else {
@@ -76,7 +76,6 @@ final class NooberWindow {
 
     func showDebugger(tab: NooberTab? = nil) {
         guard debuggerWindow == nil else {
-            // Already showing — just switch tab if requested
             if let tab, let tabBar = debuggerWindow?.rootViewController as? UITabBarController {
                 tabBar.selectedIndex = tab.rawValue
             }
@@ -85,6 +84,7 @@ final class NooberWindow {
         guard let scene = overlayWindow?.windowScene else { return }
 
         isDebuggerShowing = true
+        tabDismissTargets.removeAll()
 
         let window = UIWindow(windowScene: scene)
         window.windowLevel = .alert + 2
@@ -134,9 +134,13 @@ final class NooberWindow {
             .withConfiguration(UIImage.SymbolConfiguration(pointSize: 24))
             .withRenderingMode(.alwaysOriginal)
             .withTintColor(.tertiaryLabel)
+        let dismissTarget = ClosureAction(action: dismiss)
+        tabDismissTargets.append(dismissTarget)
         host.navigationItem.rightBarButtonItem = UIBarButtonItem(
             image: dismissImage,
-            primaryAction: UIAction { _ in dismiss() }
+            style: .plain,
+            target: dismissTarget,
+            action: #selector(ClosureAction.invoke)
         )
 
         let nav = UINavigationController(rootViewController: host)
@@ -178,5 +182,20 @@ final class BubbleWindow: UIWindow {
     override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
         let hitArea = NooberWindow.shared.bubbleFrame.insetBy(dx: -10, dy: -10)
         return hitArea.contains(point)
+    }
+}
+
+// MARK: - ClosureAction
+
+/// Target-action wrapper so UIBarButtonItems can run a closure without the iOS 14+ `UIAction` API.
+final class ClosureAction: NSObject {
+    private let action: () -> Void
+
+    init(action: @escaping () -> Void) {
+        self.action = action
+    }
+
+    @objc func invoke() {
+        action()
     }
 }

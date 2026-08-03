@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - Network Tab
 
 struct NetworkTabContent: View {
-    @StateObject private var store = NetworkActivityStore.shared
+    @ObservedObject private var store = NetworkActivityStore.shared
 
     var body: some View {
         NetworkListView(store: store)
@@ -13,13 +13,16 @@ struct NetworkTabContent: View {
 // MARK: - Storage Tab (UserDefaults + Keychain)
 
 struct StorageTabContent: View {
-    @StateObject private var userDefaultsStore = UserDefaultsStore.shared
-    @StateObject private var keychainStore = KeychainStore.shared
+    @ObservedObject private var userDefaultsStore = UserDefaultsStore.shared
+    @ObservedObject private var keychainStore = KeychainStore.shared
     @State private var selectedSection: StorageSection = .userDefaults
 
     var body: some View {
         VStack(spacing: 0) {
-            Picker("Section", selection: $selectedSection) {
+            Picker("Section", selection: Binding(
+                get: { selectedSection },
+                set: { selectedSection = $0; NooberTheme.hapticLight() }
+            )) {
                 Text("UserDefaults").tag(StorageSection.userDefaults)
                 Text("Keychain").tag(StorageSection.keychain)
                 Text("App Info").tag(StorageSection.appInfo)
@@ -27,7 +30,6 @@ struct StorageTabContent: View {
             .pickerStyle(.segmented)
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .onChange(of: selectedSection) { _ in NooberTheme.hapticLight() }
 
             Group {
                 switch selectedSection {
@@ -47,7 +49,7 @@ struct StorageTabContent: View {
 // MARK: - Logs Tab
 
 struct LogsTabContent: View {
-    @StateObject private var logStore = LogStore.shared
+    @ObservedObject private var logStore = LogStore.shared
 
     var body: some View {
         LogListView(store: logStore)
@@ -57,21 +59,23 @@ struct LogsTabContent: View {
 // MARK: - Rules Tab (URL Rewrite + Mocks + Intercept)
 
 struct RulesTabContent: View {
-    @StateObject private var rulesStore = RulesStore.shared
-    @StateObject private var pendingStore = PendingInterceptStore.shared
-    @StateObject private var envStore = EnvironmentStore.shared
-    @StateObject private var deepLinkStore = DeepLinkStore.shared
+    @ObservedObject private var rulesStore = RulesStore.shared
+    @ObservedObject private var pendingStore = PendingInterceptStore.shared
+    @ObservedObject private var envStore = EnvironmentStore.shared
+    @ObservedObject private var deepLinkStore = DeepLinkStore.shared
     @State private var selectedSection: RulesSection = .rewrite
     @State private var reviewingIntercept: PendingIntercept?
 
     var body: some View {
         VStack(spacing: 0) {
-            // Pending intercept banner
             if let first = pendingStore.pendingIntercepts.first {
                 interceptBanner(first)
             }
 
-            Picker("Section", selection: $selectedSection) {
+            Picker("Section", selection: Binding(
+                get: { selectedSection },
+                set: { selectedSection = $0; NooberTheme.hapticLight() }
+            )) {
                 Text("Rewrite").tag(RulesSection.rewrite)
                 Text("Mocks").tag(RulesSection.mocks)
                 Text("Intercept").tag(RulesSection.intercept)
@@ -81,7 +85,6 @@ struct RulesTabContent: View {
             .pickerStyle(.segmented)
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .onChange(of: selectedSection) { _ in NooberTheme.hapticLight() }
 
             Group {
                 switch selectedSection {
@@ -132,8 +135,8 @@ struct RulesTabContent: View {
 // MARK: - More Tab (QA, Actions, AI Flows)
 
 struct MoreTabContent: View {
-    @StateObject private var actionStore = CustomActionStore.shared
-    @StateObject private var qaStore = QAChecklistStore.shared
+    @ObservedObject private var actionStore = CustomActionStore.shared
+    @ObservedObject private var qaStore = QAChecklistStore.shared
     @State private var activeDestination: MoreDestination?
 
     var body: some View {
@@ -192,7 +195,7 @@ struct MoreTabContent: View {
             }
             .background(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color(uiColor: .secondarySystemBackground))
+                    .fill(Color(.secondarySystemBackground))
             )
             .padding(16)
         }
@@ -223,7 +226,7 @@ struct MoreTabContent: View {
 
                 Image(systemName: "chevron.right")
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(Color(uiColor: .tertiaryLabel))
+                    .foregroundColor(Color(.tertiaryLabel))
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
@@ -251,7 +254,7 @@ struct MoreTabContent: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
         }
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color(.secondarySystemBackground))
     }
 }
 
