@@ -1,6 +1,6 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Swift-6.0+-F05138?style=for-the-badge&logo=swift&logoColor=white" alt="Swift 6.0+" />
-  <img src="https://img.shields.io/badge/iOS-15%2B-007AFF?style=for-the-badge&logo=apple&logoColor=white" alt="iOS 15+" />
+  <img src="https://img.shields.io/badge/iOS-13%2B-007AFF?style=for-the-badge&logo=apple&logoColor=white" alt="iOS 13+" />
   <img src="https://img.shields.io/badge/SPM-Compatible-2ECC71?style=for-the-badge&logo=swift&logoColor=white" alt="SPM Compatible" />
   <img src="https://img.shields.io/badge/Dependencies-Zero-9B59B6?style=for-the-badge" alt="Zero Dependencies" />
 </p>
@@ -131,7 +131,7 @@ https://github.com/noob-programmer1/Noober-iOS.git
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/noob-programmer1/Noober-iOS.git", from: "2.0.0")
+    .package(url: "https://github.com/noob-programmer1/Noober-iOS.git", from: "1.0.0")
 ],
 targets: [
     .target(name: "YourApp", dependencies: ["Noober"])
@@ -356,7 +356,7 @@ Deploy by pushing `docs/` to the `gh-pages` branch. The `.nojekyll` file in the 
 
 | | Minimum |
 |---|---------|
-| iOS | 15.0+ |
+| iOS | 13.0+ |
 | Swift | 6.0+ |
 | Xcode | 16+ |
 | Dependencies | None |

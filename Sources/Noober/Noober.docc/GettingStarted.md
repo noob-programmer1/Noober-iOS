@@ -4,7 +4,7 @@ Set up Noober in your iOS project with one line of code.
 
 ## Overview
 
-Noober requires iOS 15+ and Swift 6.0+. It has zero third-party dependencies.
+Noober requires iOS 13+ and Swift 6.0+. It has zero third-party dependencies.
 
 ### Installation
 
@@ -12,13 +12,13 @@ Add Noober via Swift Package Manager in Xcode:
 
 1. Go to **File > Add Package Dependencies**
 2. Enter: `https://github.com/noob-programmer1/Noober-iOS.git`
-3. Select **Up to Next Major** from `2.0.0`
+3. Select **Up to Next Major** from `1.0.0`
 
 Or in your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/noob-programmer1/Noober-iOS.git", from: "2.0.0")
+    .package(url: "https://github.com/noob-programmer1/Noober-iOS.git", from: "1.0.0")
 ]
 ```
 

@@ -7,10 +7,10 @@
 
 ```
 url: https://github.com/noob-programmer1/Noober-iOS.git
-from: "2.0.0"
+from: "1.0.0"
 target dependency: "Noober"
 import: Noober
-platforms: iOS 15+
+platforms: iOS 13+
 swift: 6.0+
 dependencies: none
 ```
