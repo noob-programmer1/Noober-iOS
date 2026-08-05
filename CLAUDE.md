@@ -73,9 +73,33 @@ Noober.shared.registerActions([
     }
 ])
 
+// Ship mock responses with the build (registering replaces the previously
+// registered set — safe to call on every launch, never duplicates)
+Noober.shared.registerMocks([
+    .init("Empty cart", url: "/api/cart", json: #"{"items": []}"#),
+    .init("Payment failure", url: "/api/payments", method: "POST",
+          statusCode: 500, json: #"{"error": "timeout"}"#, isEnabled: false)
+])
+
+// Pause matching requests for review before they hit the network
+Noober.shared.registerIntercepts([
+    .init("Payments", url: "/api/payments", method: "POST", isEnabled: false)
+])
+
+// Add or remove a single rule mid-session
+let id = Noober.shared.addMock(.init("Force 401", url: "/api/me", statusCode: 401))
+Noober.shared.removeMock(id: id)
+
+// Append actions instead of replacing them
+Noober.shared.addAction(.init("Expire Session") { AuthManager.expireToken() })
+
 // For custom URLSession configurations
 Noober.shared.inject(into: myCustomSessionConfig)
 ```
+
+Rules registered from code are never persisted — the app re-creates them each
+launch, and rules created by hand in the debugger take precedence when both
+match a request. Code-registered rules show a `CODE` badge in the Rules tabs.
 
 ## Recording Flows
 

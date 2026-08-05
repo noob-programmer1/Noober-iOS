@@ -28,6 +28,16 @@ final class CustomActionStore: ObservableObject {
         actions = customActions.map { RegisteredAction(from: $0) }
     }
 
+    /// Appends to the registered actions instead of replacing them, so feature
+    /// modules can contribute their own without knowing about each other.
+    func add(_ customActions: [CustomAction]) {
+        actions.append(contentsOf: customActions.map { RegisteredAction(from: $0) })
+    }
+
+    func remove(title: String) {
+        actions.removeAll { $0.title == title }
+    }
+
     func clearAll() {
         actions.removeAll()
     }

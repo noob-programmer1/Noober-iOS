@@ -38,6 +38,7 @@ public final class Noober {
         EnvironmentStore.shared.clearAll()
         QAChecklistStore.shared.clearAll()
         CustomActionStore.shared.clearAll()
+        RulesStore.shared.clearCodeRegisteredRules()
     }
 
     // MARK: - Environments
@@ -88,6 +89,106 @@ public final class Noober {
     ///
     public func registerActions(_ actions: [CustomAction]) {
         CustomActionStore.shared.register(actions)
+    }
+
+    /// Append an action to the ones already registered.
+    /// Use this when several feature modules each contribute their own actions
+    /// and no single place knows the full list.
+    ///
+    ///     Noober.shared.addAction(.init("Expire Session", icon: "clock.badge.xmark") {
+    ///         AuthManager.shared.expireToken()
+    ///     })
+    ///
+    public func addAction(_ action: CustomAction) {
+        CustomActionStore.shared.add([action])
+    }
+
+    /// Append actions to the ones already registered.
+    public func addActions(_ actions: [CustomAction]) {
+        CustomActionStore.shared.add(actions)
+    }
+
+    /// Remove every registered action with this title.
+    public func removeAction(_ title: String) {
+        CustomActionStore.shared.remove(title: title)
+    }
+
+    /// Remove all registered actions.
+    public func clearActions() {
+        CustomActionStore.shared.clearAll()
+    }
+
+    // MARK: - Mocks
+
+    /// Register mock responses that ship with the build.
+    ///
+    ///     Noober.shared.registerMocks([
+    ///         .init("Empty cart", url: "/api/v1/cart", json: #"{"items": []}"#),
+    ///         .init("Payment failure", url: "/api/v1/payments", method: "POST",
+    ///               statusCode: 500, json: #"{"error": "gateway_timeout"}"#,
+    ///               isEnabled: false),
+    ///     ])
+    ///
+    /// Registering replaces any mocks registered from code previously — the array
+    /// you pass is the full set — so calling this on every launch never
+    /// accumulates duplicates. Mocks created by hand in the debugger are left
+    /// alone and take precedence over these when both match a request.
+    ///
+    /// Code-registered mocks are not persisted; the app re-creates them each launch.
+    /// Pass `isEnabled: false` to register a mock in the off position and flip it on
+    /// from the debugger UI when a test needs it.
+    public func registerMocks(_ mocks: [NooberMock]) {
+        RulesStore.shared.registerCodeMockRules(mocks.map { $0.toRule() })
+    }
+
+    /// Add a single mock at the top of the list, above every existing rule.
+    ///
+    /// Use this to mock something mid-session — from a test hook or a custom
+    /// action — when `registerMocks(_:)`'s replace-everything behaviour is wrong.
+    ///
+    /// - Returns: The mock's id, for `removeMock(id:)`.
+    @discardableResult
+    public func addMock(_ mock: NooberMock) -> UUID {
+        RulesStore.shared.addMockRule(mock.toRule())
+        return mock.id
+    }
+
+    /// Remove a mock by id, whether it was added from code or created in the debugger.
+    public func removeMock(id: UUID) {
+        RulesStore.shared.deleteMockRule(id: id)
+    }
+
+    // MARK: - Intercepts
+
+    /// Register intercept rules that pause matching requests for review before
+    /// they hit the network.
+    ///
+    ///     Noober.shared.registerIntercepts([
+    ///         .init("Payments", url: "/api/v1/payments", method: "POST", isEnabled: false),
+    ///     ])
+    ///
+    /// Same semantics as `registerMocks(_:)`: the array is the full set of
+    /// code-registered rules, rules created in the debugger are untouched, and
+    /// nothing is persisted.
+    ///
+    /// Registering with `isEnabled: false` is usually what you want — a rule that
+    /// pauses every payment call from launch will stall the app.
+    public func registerIntercepts(_ intercepts: [NooberIntercept]) {
+        RulesStore.shared.registerCodeInterceptRules(intercepts.map { $0.toRule() })
+    }
+
+    /// Add a single intercept rule at the top of the list, above every existing rule.
+    /// - Returns: The rule's id, for `removeIntercept(id:)`.
+    @discardableResult
+    public func addIntercept(_ intercept: NooberIntercept) -> UUID {
+        RulesStore.shared.addInterceptRule(intercept.toRule())
+        return intercept.id
+    }
+
+    /// Remove an intercept rule by id, whether it was added from code or created
+    /// in the debugger.
+    public func removeIntercept(id: UUID) {
+        RulesStore.shared.deleteInterceptRule(id: id)
     }
 
     // MARK: - Logging

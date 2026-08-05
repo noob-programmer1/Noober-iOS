@@ -7,6 +7,12 @@ struct InterceptRule: Identifiable, Codable, Sendable, Hashable {
     let httpMethod: String?
     var isEnabled: Bool
     let createdAt: Date
+    /// Not persisted — code-registered rules are re-created on every launch.
+    var source: RuleSource = .manual
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, matchPattern, httpMethod, isEnabled, createdAt
+    }
 
     init(
         id: UUID = UUID(),
@@ -14,7 +20,8 @@ struct InterceptRule: Identifiable, Codable, Sendable, Hashable {
         matchPattern: URLMatchPattern,
         httpMethod: String? = nil,
         isEnabled: Bool = true,
-        createdAt: Date = Date()
+        createdAt: Date = Date(),
+        source: RuleSource = .manual
     ) {
         self.id = id
         self.name = name
@@ -22,6 +29,7 @@ struct InterceptRule: Identifiable, Codable, Sendable, Hashable {
         self.httpMethod = httpMethod
         self.isEnabled = isEnabled
         self.createdAt = createdAt
+        self.source = source
     }
 
     func matches(_ request: URLRequest) -> Bool {

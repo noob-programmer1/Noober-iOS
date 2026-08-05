@@ -67,7 +67,7 @@ Captures every `URLSession` request automatically — HTTP, HTTPS, and WebSocket
 <td width="50%" valign="top">
 
 ### Rules Engine
-**Rewrite** URLs to redirect traffic between servers. **Mock** responses to test edge cases without a backend. **Intercept** requests mid-flight — inspect, edit, then proceed or cancel. Five match modes: Host, Contains, Prefix, Exact, Regex. All rules persist across launches.
+**Rewrite** URLs to redirect traffic between servers. **Mock** responses to test edge cases without a backend. **Intercept** requests mid-flight — inspect, edit, then proceed or cancel. Five match modes: Host, Contains, Prefix, Exact, Regex. Build rules by hand in the debugger — those persist across launches — or ship them with the app via `registerMocks(_:)` / `registerIntercepts(_:)`.
 
 </td>
 </tr>
@@ -193,6 +193,30 @@ struct MyApp: App {
             .init("Pull-to-refresh on feed", priority: .normal),
         ])
 
+        // Mocks that ship with the build — flip them on from the debugger
+        Noober.shared.registerMocks([
+            .init("Empty cart", url: "/api/cart", json: #"{"items": []}"#,
+                  isEnabled: false),
+            .init("Payment failure", url: "/api/payments", method: "POST",
+                  statusCode: 500, json: #"{"error": "gateway_timeout"}"#,
+                  isEnabled: false),
+        ])
+
+        // Pause requests for review before they hit the network
+        Noober.shared.registerIntercepts([
+            .init("Payments", url: "/api/payments", method: "POST", isEnabled: false),
+        ])
+
+        // Shortcuts in the debugger's Storage tab
+        Noober.shared.registerActions([
+            .init("Clear Cache", icon: "trash", group: "Storage") {
+                CacheManager.shared.clearAll()
+            },
+            .init("Reset Onboarding", icon: "arrow.counterclockwise") {
+                UserDefaults.standard.removeObject(forKey: "hasSeenOnboarding")
+            },
+        ])
+
         Noober.shared.start()
         #endif
     }
@@ -231,6 +255,31 @@ public final class Noober {
 
     public func registerEnvironments(_ environments: [NooberEnvironment])
     public func registerChecklist(_ items: [QAChecklistItem])
+
+    // Rules shipped with the build. Registering replaces the previously
+    // registered set, so calling on every launch never duplicates. Rules
+    // created by hand in the debugger are untouched and take precedence.
+    public func registerMocks(_ mocks: [NooberMock])
+    public func registerIntercepts(_ intercepts: [NooberIntercept])
+
+    // Add or remove a single rule mid-session. Added rules go on top.
+    @discardableResult public func addMock(_ mock: NooberMock) -> UUID
+    @discardableResult public func addIntercept(_ intercept: NooberIntercept) -> UUID
+    public func removeMock(id: UUID)
+    public func removeIntercept(id: UUID)
+
+    // Debugger shortcuts. `register` replaces, `add` appends.
+    public func registerActions(_ actions: [CustomAction])
+    public func addAction(_ action: CustomAction)
+    public func addActions(_ actions: [CustomAction])
+    public func removeAction(_ title: String)
+    public func clearActions()
+
+    // Custom URLSession setups (Alamofire, etc.)
+    nonisolated public func inject(into configuration: URLSessionConfiguration)
+
+    // Manual screen names for custom routers. Thread-safe.
+    nonisolated public func trackScreen(_ name: String)
 
     // Thread-safe — call from any thread
     nonisolated public func log(
@@ -280,6 +329,72 @@ public struct QAChecklistItem: Sendable {
         notes: String = "",
         priority: QAChecklistPriority = .normal,
         endpoints: [String] = []
+    )
+}
+```
+
+</details>
+
+<details>
+<summary><b>NooberMock</b> — Canned response definition</summary>
+
+```swift
+public struct NooberMock: Sendable {
+    public init(
+        _ name: String,
+        url: String,
+        match: NooberURLMatch = .contains,   // .host, .contains, .prefix, .exact, .regex
+        method: String? = nil,               // nil matches any method
+        statusCode: Int = 200,
+        headers: [String: String] = ["Content-Type": "application/json"],
+        body: Data? = nil,
+        isEnabled: Bool = true,
+        id: UUID = UUID()
+    )
+
+    // Same, with a JSON string body
+    public init(_ name: String, url: String, ..., json: String, ...)
+}
+```
+
+Registered mocks are **not persisted** — the app re-creates them on every launch,
+so editing the source is the only way to change them. Register with
+`isEnabled: false` to have a mock sit in the debugger switched off, ready for a
+tester or an AI agent to flip on.
+
+</details>
+
+<details>
+<summary><b>NooberIntercept</b> — Pause-for-review definition</summary>
+
+```swift
+public struct NooberIntercept: Sendable {
+    public init(
+        _ name: String,
+        url: String,
+        match: NooberURLMatch = .contains,
+        method: String? = nil,
+        isEnabled: Bool = true,
+        id: UUID = UUID()
+    )
+}
+```
+
+Register with `isEnabled: false` unless you want matching requests paused from
+launch — a rule that stops every payment call will stall the app.
+
+</details>
+
+<details>
+<summary><b>CustomAction</b> — Debugger shortcut</summary>
+
+```swift
+public struct CustomAction: Sendable {
+    public init(
+        _ title: String,
+        icon: String = "bolt.fill",   // SF Symbol
+        group: String = "",           // optional section header
+        handler: @escaping @Sendable @MainActor () -> Void
     )
 }
 ```

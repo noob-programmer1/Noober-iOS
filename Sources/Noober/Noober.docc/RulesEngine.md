@@ -4,7 +4,7 @@ Rewrite URLs, mock responses, and intercept requests mid-flight.
 
 ## Overview
 
-The rules engine provides three types of rules that modify network behavior at runtime. All rules are persisted in UserDefaults and survive app restarts.
+The rules engine provides three types of rules that modify network behavior at runtime. Rules built by hand in the debug panel are persisted in UserDefaults and survive app restarts. Mock and intercept rules can also be registered from code — see <doc:RulesFromCode>.
 
 ### URL Match Patterns
 
@@ -48,3 +48,9 @@ When a request matches multiple rule types, they are evaluated in this order:
 2. Intercept rules (pauses the request)
 3. Environment rewrites
 4. URL rewrite rules
+
+Within a single type, the first enabled rule that matches wins. Rules created in the debug panel sort above rules registered from code, so a rule a tester adds by hand always takes precedence.
+
+## Topics
+
+- <doc:RulesFromCode>

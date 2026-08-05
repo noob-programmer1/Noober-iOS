@@ -29,6 +29,7 @@ That's it. A floating bubble appears on screen. Tap it to open the debug panel.
 - <doc:GettingStarted>
 - <doc:NetworkInspector>
 - <doc:RulesEngine>
+- <doc:RulesFromCode>
 - <doc:EnvironmentSwitching>
 - <doc:CustomLogging>
 - <doc:StorageInspector>
@@ -39,6 +40,10 @@ That's it. A floating bubble appears on screen. Tap it to open the debug panel.
 
 - ``Noober/Noober``
 - ``NooberEnvironment``
+- ``NooberMock``
+- ``NooberIntercept``
+- ``NooberURLMatch``
+- ``CustomAction``
 - ``QAChecklistItem``
 - ``QAChecklistPriority``
 - ``LogLevel``

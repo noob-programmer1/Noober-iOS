@@ -201,6 +201,9 @@ private struct MockRuleRow: View {
                             TypeBadge(text: method, color: NooberTheme.methodColor(method))
                         }
                         TypeBadge(text: "\(rule.mockStatusCode)", color: statusColor)
+                        if rule.source == .code {
+                            TypeBadge(text: "CODE", color: .secondary)
+                        }
                         Spacer()
                         Toggle("", isOn: Binding(
                             get: { rule.isEnabled },

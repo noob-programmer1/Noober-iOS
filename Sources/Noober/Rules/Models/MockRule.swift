@@ -10,6 +10,13 @@ struct MockRule: Identifiable, Codable, Sendable, Hashable {
     let mockResponseBody: Data?
     var isEnabled: Bool
     let createdAt: Date
+    /// Not persisted — code-registered rules are re-created on every launch.
+    var source: RuleSource = .manual
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, matchPattern, httpMethod, mockStatusCode
+        case mockResponseHeaders, mockResponseBody, isEnabled, createdAt
+    }
 
     init(
         id: UUID = UUID(),
@@ -20,7 +27,8 @@ struct MockRule: Identifiable, Codable, Sendable, Hashable {
         mockResponseHeaders: [String: String] = ["Content-Type": "application/json"],
         mockResponseBody: Data? = nil,
         isEnabled: Bool = true,
-        createdAt: Date = Date()
+        createdAt: Date = Date(),
+        source: RuleSource = .manual
     ) {
         self.id = id
         self.name = name
@@ -31,6 +39,7 @@ struct MockRule: Identifiable, Codable, Sendable, Hashable {
         self.mockResponseBody = mockResponseBody
         self.isEnabled = isEnabled
         self.createdAt = createdAt
+        self.source = source
     }
 
     func matches(_ request: URLRequest) -> Bool {

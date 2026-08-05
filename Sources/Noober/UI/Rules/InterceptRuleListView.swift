@@ -204,6 +204,9 @@ private struct InterceptRuleRow: View {
                         }
                         TypeBadge(text: rule.matchPattern.mode.rawValue.uppercased(),
                                   color: NooberTheme.matchModeColor(rule.matchPattern.mode))
+                        if rule.source == .code {
+                            TypeBadge(text: "CODE", color: .secondary)
+                        }
                         Spacer()
                         Toggle("", isOn: Binding(
                             get: { rule.isEnabled },

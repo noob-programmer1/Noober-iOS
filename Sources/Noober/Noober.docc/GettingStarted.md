@@ -52,6 +52,28 @@ Noober.shared.registerChecklist([
 ])
 ```
 
+### Register Mocks and Intercepts
+
+```swift
+Noober.shared.registerMocks([
+    .init("Empty cart", url: "/api/v1/cart", json: #"{"items": []}"#),
+])
+
+Noober.shared.registerIntercepts([
+    .init("Payments", url: "/api/v1/payments", method: "POST", isEnabled: false),
+])
+```
+
+Registering replaces the previously registered set, so this is safe to call on every launch. See <doc:RulesFromCode>.
+
+### Register Debugger Actions
+
+```swift
+Noober.shared.registerActions([
+    .init("Clear Cache", icon: "trash") { CacheManager.shared.clearAll() },
+])
+```
+
 ### Add Custom Logs
 
 ```swift

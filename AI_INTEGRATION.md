@@ -17,7 +17,7 @@ dependencies: none
 
 ## Constraints
 
-- `Noober` class is `@MainActor` — call `start()`, `stop()`, `registerEnvironments()`, `registerChecklist()`, `showDebugger()`, `hideDebugger()` from the main actor only.
+- `Noober` class is `@MainActor` — call `start()`, `stop()`, `register*()`, `add*()`, `remove*()`, `showDebugger()`, `hideDebugger()` from the main actor only.
 - `log()` is `nonisolated` — safe from any thread/actor.
 - Always wrap ALL Noober usage in `#if DEBUG` / `#endif`. Noober must never ship in production builds.
 - Call `start()` AFTER a `UIWindowScene` exists (e.g., in `ContentView.onAppear` or `AppDelegate.didFinishLaunching`), not in `App.init()` if using SwiftUI lifecycle, because the floating bubble needs an active window scene.
@@ -48,6 +48,29 @@ Noober.shared.registerEnvironments([NooberEnvironment])
 
 // QA Checklist
 Noober.shared.registerChecklist([QAChecklistItem])
+
+// Mock rules — replaces the previously registered set, never duplicates
+Noober.shared.registerMocks([NooberMock])
+Noober.shared.addMock(NooberMock) -> UUID        // @discardableResult, goes on top
+Noober.shared.removeMock(id: UUID)
+
+// Intercept rules — same semantics
+Noober.shared.registerIntercepts([NooberIntercept])
+Noober.shared.addIntercept(NooberIntercept) -> UUID
+Noober.shared.removeIntercept(id: UUID)
+
+// Custom actions — `register` replaces, `add` appends
+Noober.shared.registerActions([CustomAction])
+Noober.shared.addAction(CustomAction)
+Noober.shared.addActions([CustomAction])
+Noober.shared.removeAction(_ title: String)
+Noober.shared.clearActions()
+
+// Custom URLSession configs (Alamofire and friends), nonisolated
+Noober.shared.inject(into: URLSessionConfiguration)
+
+// Manual screen names for custom routers (nonisolated, thread-safe)
+Noober.shared.trackScreen(_ name: String)
 
 // Logging (nonisolated, thread-safe)
 Noober.shared.log(_ message: String, level: LogLevel = .info, category: LogCategory = .general, file: String = #file, line: UInt = #line)
@@ -83,6 +106,68 @@ QAChecklistItem(_ title: String, notes: String = "", priority: QAChecklistPriori
 .normal  // "NORMAL"
 .low     // "LOW"
 ```
+
+### NooberMock
+
+```swift
+NooberMock(_ name: String,
+           url: String,
+           match: NooberURLMatch = .contains,
+           method: String? = nil,                 // nil matches any method
+           statusCode: Int = 200,
+           headers: [String: String] = ["Content-Type": "application/json"],
+           body: Data? = nil,
+           isEnabled: Bool = true,
+           id: UUID = UUID())
+
+// Same signature with `json: String` instead of `body: Data?`
+NooberMock("Empty cart", url: "/api/cart", json: #"{"items": []}"#)
+
+// Conforms to: Sendable
+```
+
+### NooberIntercept
+
+```swift
+NooberIntercept(_ name: String,
+                url: String,
+                match: NooberURLMatch = .contains,
+                method: String? = nil,
+                isEnabled: Bool = true,
+                id: UUID = UUID())
+
+// Conforms to: Sendable
+```
+
+### NooberURLMatch
+
+```swift
+// enum NooberURLMatch: Sendable
+.host      // URL host == pattern (case-insensitive)
+.contains  // URL contains pattern (case-insensitive) — default
+.prefix    // URL starts with pattern (case-insensitive)
+.exact     // URL == pattern
+.regex     // URL matches regular expression
+```
+
+### CustomAction
+
+```swift
+CustomAction(_ title: String,
+             icon: String = "bolt.fill",   // SF Symbol
+             group: String = "",           // optional section header
+             handler: @escaping @Sendable @MainActor () -> Void)
+
+// Conforms to: Sendable
+```
+
+### Rule persistence
+
+Rules created in the debugger UI (or by an agent over MCP) persist across
+launches. Rules registered from code do not — the app re-creates them on every
+launch, so `registerMocks(_:)` / `registerIntercepts(_:)` are safe to call
+unconditionally at startup. When both a manual and a code rule match a request,
+the manual one wins. Code rules carry a `CODE` badge in the debugger.
 
 ### LogLevel
 

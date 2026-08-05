@@ -106,7 +106,11 @@ final class RulesStore: ObservableObject {
     }
 
     func deleteMockRule(_ rule: MockRule) {
-        mockRules.removeAll { $0.id == rule.id }
+        deleteMockRule(id: rule.id)
+    }
+
+    func deleteMockRule(id: UUID) {
+        mockRules.removeAll { $0.id == id }
         saveAndSync()
     }
 
@@ -149,7 +153,11 @@ final class RulesStore: ObservableObject {
     }
 
     func deleteInterceptRule(_ rule: InterceptRule) {
-        interceptRules.removeAll { $0.id == rule.id }
+        deleteInterceptRule(id: rule.id)
+    }
+
+    func deleteInterceptRule(id: UUID) {
+        interceptRules.removeAll { $0.id == id }
         saveAndSync()
     }
 
@@ -169,6 +177,36 @@ final class RulesStore: ObservableObject {
 
     func clearAllInterceptRules() {
         interceptRules.removeAll()
+        saveAndSync()
+    }
+
+    // MARK: - Code Registration
+
+    /// Replaces every code-registered mock with `rules`, leaving rules created in
+    /// the debugger UI untouched. Code rules sit below manual ones, so a mock a
+    /// tester adds by hand always takes precedence over one baked into the app.
+    ///
+    /// Editing a code rule in the debugger promotes it to a manual rule with the
+    /// same id, which then persists — so a rule whose id is already held manually
+    /// is dropped here rather than added twice.
+    func registerCodeMockRules(_ rules: [MockRule]) {
+        let manual = mockRules.filter { $0.source == .manual }
+        let overridden = Set(manual.map(\.id))
+        mockRules = manual + rules.filter { !overridden.contains($0.id) }
+        saveAndSync()
+    }
+
+    /// Replaces every code-registered intercept rule with `rules`. See `registerCodeMockRules(_:)`.
+    func registerCodeInterceptRules(_ rules: [InterceptRule]) {
+        let manual = interceptRules.filter { $0.source == .manual }
+        let overridden = Set(manual.map(\.id))
+        interceptRules = manual + rules.filter { !overridden.contains($0.id) }
+        saveAndSync()
+    }
+
+    func clearCodeRegisteredRules() {
+        mockRules.removeAll { $0.source == .code }
+        interceptRules.removeAll { $0.source == .code }
         saveAndSync()
     }
 
@@ -195,15 +233,18 @@ final class RulesStore: ObservableObject {
         syncSnapshots()
     }
 
+    /// Code-registered rules are deliberately excluded — the app re-registers them
+    /// on every launch, so persisting them would duplicate them and strand copies
+    /// of rules that have since been deleted from the source.
     private func saveRules() {
         let encoder = JSONEncoder()
         if let data = try? encoder.encode(rewriteRules) {
             UserDefaults.standard.set(data, forKey: rewriteKey)
         }
-        if let data = try? encoder.encode(mockRules) {
+        if let data = try? encoder.encode(mockRules.filter { $0.source == .manual }) {
             UserDefaults.standard.set(data, forKey: mockKey)
         }
-        if let data = try? encoder.encode(interceptRules) {
+        if let data = try? encoder.encode(interceptRules.filter { $0.source == .manual }) {
             UserDefaults.standard.set(data, forKey: interceptKey)
         }
     }
