@@ -15,6 +15,7 @@
 <p align="center">
   <a href="https://noob-programmer1.github.io/Noober-iOS/documentation/noober/">Documentation</a> &bull;
   <a href="#-quick-start">Quick Start</a> &bull;
+  <a href="#use-it-with-ai-agents">AI Agents</a> &bull;
   <a href="#-installation">Install</a> &bull;
   <a href="#-api-reference">API</a> &bull;
   <a href="LICENSE">License</a>
@@ -51,6 +52,41 @@ Noober.shared.start()  // That's it.
 ---
 
 > **Using AI to code?** Point your AI assistant (Claude, Cursor, Copilot, etc.) to [`AI_INTEGRATION.md`](AI_INTEGRATION.md) — a machine-readable reference with exact API signatures, copy-paste integration patterns, and constraints. It's designed so any AI can integrate Noober into your project in seconds.
+
+---
+
+## Use It With AI Agents
+
+Everything the debugger shows you, an AI agent can read — through
+[**NooberMCP**](https://github.com/noob-programmer1/NooberMCP), the companion MCP server.
+The SDK opens a local socket; the server relays it to Claude Code, Cursor, Codex, or any
+MCP client.
+
+```bash
+claude mcp add noober -- npx -y noober-mcp
+```
+
+Claude Code users can install the plugin instead, which also ships a `/noober:setup` skill
+that wires the SDK into an app:
+
+```
+/plugin marketplace add noob-programmer1/NooberMCP
+/plugin install noober@noobqa
+```
+
+Then your agent can answer questions about the *running* app instead of guessing from source:
+
+| Ask | Tool |
+|-----|------|
+| "Did the booking API get called with the right body?" | `noober_assert_request` |
+| "What's on screen right now?" | `noober_screen_html`, `noober_screen_text` |
+| "Show me the WebSocket frames" | `noober_get_websocket_logs` |
+| "Why is the cart total wrong?" | `noober_get_network_logs`, `noober_get_request_detail` |
+| "Make this endpoint return 500" | `noober_add_mock_rule` |
+| "Tap through the checkout flow" | `tap`, `swipe`, `type_text` |
+
+Requires macOS and a DEBUG build with `Noober.shared.start()` running. Full tool list and
+setup in the [NooberMCP README](https://github.com/noob-programmer1/NooberMCP).
 
 ---
 
@@ -464,6 +500,22 @@ $(xcrun --find docc) process-archive \
 Deploy by pushing `docs/` to the `gh-pages` branch. The `.nojekyll` file in the branch root prevents Jekyll from interfering with DocC's SPA routing.
 
 </details>
+
+---
+
+## Example App
+
+`Example/` contains a small SwiftUI app wired to the SDK, plus a local traffic generator —
+useful for trying Noober out or for working on the SDK itself.
+
+```bash
+brew install xcodegen                 # once
+cd Example && xcodegen generate       # produces NooberSample.xcodeproj
+python3 demo_server.py                # HTTP on :8765, WebSocket echo on :8766
+```
+
+Open `NooberSample.xcodeproj`, run it on a simulator, and use the buttons to fire HTTP
+requests, open a WebSocket, and stream large JSON frames through the inspector.
 
 ---
 

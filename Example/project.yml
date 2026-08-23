@@ -1,0 +1,37 @@
+name: NooberSample
+
+options:
+  bundleIdPrefix: com.noober
+  deploymentTarget:
+    iOS: "15.0"
+  createIntermediateGroups: true
+
+packages:
+  Noober:
+    path: ../
+
+targets:
+  NooberSample:
+    type: application
+    platform: iOS
+    sources:
+      - NooberSample
+    dependencies:
+      - package: Noober
+        product: Noober
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.noober.sample
+        GENERATE_INFOPLIST_FILE: YES
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SWIFT_VERSION: "5.0"
+        CODE_SIGNING_ALLOWED: NO
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+    info:
+      path: NooberSample/Info.plist
+      properties:
+        UILaunchScreen: {}
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+          NSAllowsLocalNetworking: true

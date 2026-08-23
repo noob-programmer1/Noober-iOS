@@ -15,6 +15,27 @@ swift: 6.0+
 dependencies: none
 ```
 
+## Companion MCP Server
+
+Noober pairs with NooberMCP, which exposes the running app to AI agents over MCP.
+
+```
+repo:    https://github.com/noob-programmer1/NooberMCP
+npm:     noober-mcp
+install: claude mcp add noober -- npx -y noober-mcp
+plugin:  /plugin marketplace add noob-programmer1/NooberMCP
+         /plugin install noober@noobqa
+setup:   /noober:setup    (adds the SDK to an app and calls start() correctly)
+requires: macOS + a DEBUG build with Noober.shared.start() already running
+```
+
+Representative tools: `noober_status`, `noober_screen_html`, `noober_screen_text`,
+`noober_get_network_logs`, `noober_get_request_detail`, `noober_assert_request`,
+`noober_get_websocket_logs`, `noober_get_app_logs`, `noober_get_user_defaults`,
+`noober_add_mock_rule`, `noober_switch_environment`, `tap`, `swipe`, `type_text`.
+
+---
+
 ## Constraints
 
 - `Noober` class is `@MainActor` — call `start()`, `stop()`, `register*()`, `add*()`, `remove*()`, `showDebugger()`, `hideDebugger()` from the main actor only.

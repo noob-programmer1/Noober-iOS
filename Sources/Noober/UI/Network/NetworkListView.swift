@@ -297,7 +297,7 @@ struct NetworkListView: View {
                             .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 16))
                             .nooberHideRowSeparator()
                         case .webSocket(let conn):
-                            NavigationLink(destination: WebSocketDetailPlaceholder(connection: conn)) {
+                            NavigationLink(destination: WebSocketDetailView(connection: conn)) {
                                 WebSocketRowView(connection: conn)
                             }
                             .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 16))
@@ -419,7 +419,7 @@ struct NetworkListView: View {
                     .nooberHideRowSeparator()
 
                 case .webSocket(let conn):
-                    NavigationLink(destination: WebSocketDetailPlaceholder(connection: conn)) {
+                    NavigationLink(destination: WebSocketDetailView(connection: conn)) {
                         WebSocketRowView(connection: conn)
                     }
                     .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 16))
@@ -619,84 +619,3 @@ private struct WebSocketRowView: View {
     }
 }
 
-// MARK: - WS Detail Placeholder (to be built out later)
-
-struct WebSocketDetailPlaceholder: View {
-    let connection: WebSocketConnectionModel
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 6) {
-                        WebSocketBadge(status: connection.status)
-                        Text(connection.status.rawValue)
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(NooberTheme.wsStatusColor(connection.status))
-                        Spacer()
-                        Text("\(connection.frames.count) frames")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.secondary)
-                    }
-                    Text(connection.url)
-                        .font(.system(size: 12, design: .monospaced))
-                        .foregroundColor(.primary.opacity(0.8))
-                        .nooberTextSelection()
-                }
-                .padding(16)
-                .background(Color(.secondarySystemBackground))
-                .cornerRadius(12)
-
-                if connection.frames.isEmpty {
-                    Text("No frames captured yet")
-                        .foregroundColor(.secondary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 40)
-                } else {
-                    NooberLazyVStack(spacing: 1) {
-                        ForEach(connection.frames.reversed()) { frame in
-                            wsFrameRow(frame)
-                        }
-                    }
-                    .background(Color(.secondarySystemBackground))
-                    .cornerRadius(12)
-                }
-            }
-            .padding(16)
-        }
-        .nooberNavigationBarTitle(connection.displayName)
-    }
-
-    private func wsFrameRow(_ frame: WebSocketFrameModel) -> some View {
-        HStack(alignment: .top, spacing: 8) {
-            Image(systemName: frame.direction == .sent ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
-                .font(.system(size: 14))
-                .foregroundColor(frame.direction == .sent ? NooberTheme.warning : NooberTheme.info)
-
-            VStack(alignment: .leading, spacing: 3) {
-                HStack {
-                    Text(frame.frameType.rawValue)
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
-                        .foregroundColor(frame.isJSON ? NooberTheme.success : .secondary)
-                    if frame.isJSON {
-                        Text("JSON")
-                            .font(.system(size: 9, weight: .bold))
-                            .foregroundColor(NooberTheme.success)
-                    }
-                    Spacer()
-                    Text(frame.sizeText)
-                        .font(.system(size: 10, design: .monospaced))
-                        .foregroundColor(Color(.tertiaryLabel))
-                }
-
-                Text(frame.payloadPreview)
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundColor(.primary.opacity(0.8))
-                    .lineLimit(3)
-            }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(Color(.systemBackground))
-    }
-}

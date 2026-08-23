@@ -7,25 +7,28 @@ struct FloatingBubbleView: View {
 
     @ObservedObject private var store = NetworkActivityStore.shared
     @State private var lastSeenPulseID: UInt = NetworkActivityStore.shared.pulseID
-    @State private var lastSeenActiveRequestCount: Int = NetworkActivityStore.shared.activeRequestCount
 
     // MARK: - Drag state
 
     @State private var position = CGPoint(x: UIScreen.main.bounds.width - 40, y: 120)
     @State private var isDragging = false
 
-    // MARK: - Animation state
+    // MARK: - Appearance state
 
-    @State private var pulseScale: CGFloat = 1.0
-    @State private var ringScale: CGFloat = 1.0
-    @State private var ringOpacity: Double = 0
-    @State private var ringColor: Color = .green
-    @State private var iconRotation: Double = 0
-    @State private var glowOpacity: Double = 0
-    @State private var requestCountBadge: Int = 0
-    @State private var showBadge = false
+    /// Fades the bubble back once the user leaves it alone, the way AssistiveTouch does.
+    @State private var isDimmed = false
+    @State private var idleToken = 0
 
-    private let size: CGFloat = 54
+    /// Brief outline flash — failures only, so a healthy app stays visually quiet.
+    @State private var alertOpacity: Double = 0
+
+    /// Slow arc that only exists while requests are in flight.
+    @State private var arcRotation: Double = 0
+    @State private var isSpinning = false
+
+    private let size: CGFloat = 46
+    private let idleOpacity: Double = 0.4
+    private let idleDelay: TimeInterval = 3
 
     var body: some View {
         GeometryReader { geometry in
@@ -37,16 +40,16 @@ struct FloatingBubbleView: View {
                             if !isDragging && hypot(value.translation.width, value.translation.height) > 4 {
                                 isDragging = true
                             }
+                            wake()
                             if isDragging {
-                                let newPos = CGPoint(
+                                position = CGPoint(
                                     x: value.startLocation.x + value.translation.width,
                                     y: value.startLocation.y + value.translation.height
                                 )
-                                position = newPos
                                 reportFrame()
                             }
                         }
-                        .onEnded { value in
+                        .onEnded { _ in
                             if !isDragging {
                                 onTap()
                             } else {
@@ -56,7 +59,7 @@ struct FloatingBubbleView: View {
                                     : (screenWidth - size / 2 - 4)
                                 let clampedY = max(60, min(geometry.size.height - 60, position.y))
 
-                                withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
                                     position = CGPoint(x: snappedX, y: clampedY)
                                 }
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
@@ -64,29 +67,21 @@ struct FloatingBubbleView: View {
                                 }
                             }
                             isDragging = false
+                            wake()
                         }
                 )
                 .onReceive(store.$pulseID) { newValue in
                     guard newValue != lastSeenPulseID else { return }
                     lastSeenPulseID = newValue
-                    triggerPulse()
+                    guard !store.lastRequestSucceeded else { return }
+                    flashFailure()
                 }
                 .onReceive(store.$activeRequestCount) { count in
-                    guard count != lastSeenActiveRequestCount else { return }
-                    lastSeenActiveRequestCount = count
-                    withAnimation(.spring(response: 0.3)) {
-                        requestCountBadge = count
-                        showBadge = count > 0
-                    }
-                    if count > 0 {
-                        startSpinner()
-                    }
+                    count > 0 ? startArc() : stopArc()
                 }
                 .onAppear {
                     reportFrame()
-                    withAnimation(.spring(response: 0.6, dampingFraction: 0.6)) {
-                        pulseScale = 1.0
-                    }
+                    scheduleDim()
                 }
         }
         .edgesIgnoringSafeArea(.all)
@@ -97,78 +92,41 @@ struct FloatingBubbleView: View {
     private var bubbleContent: some View {
         ZStack {
             Circle()
-                .stroke(ringColor, lineWidth: 2.5)
-                .frame(width: size, height: size)
-                .scaleEffect(ringScale)
-                .opacity(ringOpacity)
-
-            Circle()
-                .fill(ringColor)
-                .frame(width: size, height: size)
-                .blur(radius: 12)
-                .opacity(glowOpacity)
-
-            Circle()
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color(red: 0.25, green: 0.48, blue: 1.0),
-                            Color(red: 0.15, green: 0.30, blue: 0.85)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+                .fill(NooberTheme.accent)
                 .frame(width: size, height: size)
                 .overlay(
-                    ZStack {
-                        Image(systemName: "ant.fill")
-                            .foregroundColor(.white)
-                            .font(.system(size: 24, weight: .medium))
-                            .rotationEffect(.degrees(iconRotation))
-
-                        if store.activeRequestCount > 0 {
-                            Circle()
-                                .trim(from: 0, to: 0.3)
-                                .stroke(Color.white.opacity(0.6), lineWidth: 2)
-                                .frame(width: size - 6, height: size - 6)
-                                .rotationEffect(.degrees(iconRotation * 3))
-                        }
-                    }
+                    Image(systemName: "ant.fill")
+                        .font(.system(size: 19, weight: .medium))
+                        .foregroundColor(.white)
                 )
-                .scaleEffect(isDragging ? 1.15 : pulseScale)
-                .shadow(
-                    color: Color(red: 0.15, green: 0.30, blue: 0.85).opacity(isDragging ? 0.5 : 0.3),
-                    radius: isDragging ? 12 : 8,
-                    x: 0,
-                    y: isDragging ? 6 : 4
+                .overlay(
+                    Circle()
+                        .stroke(NooberTheme.error, lineWidth: 2)
+                        .opacity(alertOpacity)
                 )
+                .shadow(color: Color.black.opacity(0.18), radius: 5, x: 0, y: 2)
 
-            if showBadge && requestCountBadge > 0 {
-                Text(requestCountBadge > 99 ? "99+" : "\(requestCountBadge)")
-                    .font(.system(size: 10, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 5)
-                    .padding(.vertical, 2)
-                    .background(Capsule().fill(Color.red))
-                    .offset(x: size / 2.5, y: -size / 2.5)
-                    .transition(.scale.combined(with: .opacity))
+            if store.activeRequestCount > 0 {
+                Circle()
+                    .trim(from: 0, to: 0.22)
+                    .stroke(
+                        Color.white.opacity(0.5),
+                        style: StrokeStyle(lineWidth: 2, lineCap: .round)
+                    )
+                    .frame(width: size - 8, height: size - 8)
+                    .rotationEffect(.degrees(arcRotation))
             }
 
             if FlowRecorder.shared.isRecording {
-                ZStack {
-                    Circle()
-                        .fill(Color.red.opacity(0.3))
-                        .frame(width: 18, height: 18)
-                    Circle()
-                        .fill(Color.red)
-                        .frame(width: 10, height: 10)
-                        .overlay(Circle().stroke(.white, lineWidth: 1.5))
-                }
-                .offset(x: -size / 2.5, y: -size / 2.5)
-                .transition(.scale.combined(with: .opacity))
+                Circle()
+                    .fill(Color.red)
+                    .frame(width: 9, height: 9)
+                    .overlay(Circle().stroke(Color.white, lineWidth: 1.5))
+                    .offset(x: -size / 2.6, y: -size / 2.6)
             }
         }
+        .scaleEffect(isDragging ? 1.06 : 1.0)
+        .opacity(isDragging || !isDimmed ? 1 : idleOpacity)
     }
 
     /// When recording and bubble is tapped, stop recording instead of opening debugger
@@ -185,55 +143,50 @@ struct FloatingBubbleView: View {
         )
     }
 
-    // MARK: - Pulse animation
+    // MARK: - Idle dimming
 
-    private func triggerPulse() {
-        let success = store.lastRequestSucceeded
-        ringColor = success ? .green : .red
+    private func wake() {
+        if isDimmed {
+            withAnimation(.easeOut(duration: 0.15)) { isDimmed = false }
+        }
+        scheduleDim()
+    }
 
-        ringScale = 1.0
-        ringOpacity = 0.9
-        withAnimation(.easeOut(duration: 0.6)) {
-            ringScale = 2.2
-            ringOpacity = 0
-        }
-
-        glowOpacity = success ? 0.4 : 0.5
-        withAnimation(.easeOut(duration: 0.5)) {
-            glowOpacity = 0
-        }
-
-        withAnimation(.spring(response: 0.2, dampingFraction: 0.4)) {
-            pulseScale = 1.12
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                pulseScale = 1.0
-            }
-        }
-
-        withAnimation(.spring(response: 0.15, dampingFraction: 0.3)) {
-            iconRotation += (success ? 15 : -15)
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {
-                iconRotation = 0
-            }
+    private func scheduleDim() {
+        idleToken &+= 1
+        let token = idleToken
+        DispatchQueue.main.asyncAfter(deadline: .now() + idleDelay) {
+            guard token == idleToken, !isDragging else { return }
+            withAnimation(.easeInOut(duration: 0.5)) { isDimmed = true }
         }
     }
 
-    // MARK: - Spinner
+    // MARK: - Failure flash
 
-    private func startSpinner() {
-        withAnimation(.linear(duration: 1.0).repeatForever(autoreverses: false)) {
-            iconRotation = 360
+    private func flashFailure() {
+        withAnimation(.easeOut(duration: 0.12)) { alertOpacity = 0.85 }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+            withAnimation(.easeOut(duration: 0.6)) { alertOpacity = 0 }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            if store.activeRequestCount == 0 {
-                withAnimation(.spring(response: 0.2)) {
-                    iconRotation = 0
-                }
-            }
+    }
+
+    // MARK: - In-flight arc
+
+    private func startArc() {
+        guard !isSpinning else { return }
+        isSpinning = true
+        arcRotation = 0
+        withAnimation(.linear(duration: 1.4).repeatForever(autoreverses: false)) {
+            arcRotation = 360
         }
+    }
+
+    private func stopArc() {
+        guard isSpinning else { return }
+        isSpinning = false
+        // Replace the repeating animation with an instant one so it doesn't keep running.
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) { arcRotation = 0 }
     }
 }

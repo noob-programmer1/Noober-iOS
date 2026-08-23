@@ -6,9 +6,10 @@ Noober is an in-app debugging SDK for iOS. When integrated, it gives AI agents (
 
 ```swift
 // Package.swift — add dependency
-.package(url: "https://github.com/aspect-build/noober-ios", from: "1.0.0")
+.package(url: "https://github.com/noob-programmer1/Noober-iOS.git", from: "1.2.0")
 
-// App init — one line
+// App startup — one line, after a window scene exists
+// (AppDelegate.didFinishLaunching or a root view's .onAppear, NOT App.init)
 #if DEBUG
 import Noober
 Noober.shared.start()
