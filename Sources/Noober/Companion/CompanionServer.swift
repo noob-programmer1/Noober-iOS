@@ -237,6 +237,12 @@ final class CompanionServer {
 
     // MARK: - Full Sync
 
+    /// Push current state to the companion immediately. Used after a write so a
+    /// read-back doesn't serve the pre-write snapshot.
+    func pushFullSync() {
+        sendFullSync()
+    }
+
     private func sendFullSync() {
         let networkStore = NetworkActivityStore.shared
         let logStore = LogStore.shared

@@ -333,6 +333,10 @@ enum CommandHandler {
             let ok: Bool
             let detail: String
         }
+        // Reads are served from the last sync, so push one before confirming —
+        // otherwise an immediate read-back returns the pre-write snapshot.
+        if ok { CompanionServer.shared.pushFullSync() }
+
         if let msg = try? CompanionMessage(type: .responseStorageWrite,
                                            payload: StorageWriteResponse(ok: ok, detail: detail)) {
             CompanionServer.shared.send(msg)
@@ -391,7 +395,17 @@ enum CommandHandler {
             itemClass: itemClass,
             originalEntry: existing
         )
-        reportStorageWrite(true, "Set keychain item \(cmd.account) in \(service)")
+
+        // SecItemAdd can fail silently — unsigned simulator builds hit
+        // errSecMissingEntitlement — so confirm the item is really there.
+        let landed = KeychainStore.shared.entries.contains {
+            $0.account == cmd.account && $0.service == service && $0.itemClass == itemClass
+        }
+        if landed {
+            reportStorageWrite(true, "Set keychain item \(cmd.account) in \(service)")
+        } else {
+            reportStorageWrite(false, "Keychain write for \(cmd.account) did not persist — the app may lack keychain entitlements (common for unsigned simulator builds)")
+        }
     }
 
     private static func handleRemoveKeychain(_ message: CompanionMessage) {
