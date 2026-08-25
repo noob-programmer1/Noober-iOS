@@ -35,10 +35,27 @@ public enum CompanionMessageType: String, Codable, Sendable {
     case commandRequestScreenshot = "command.requestScreenshot"
     case commandScreenHTML = "command.screenHTML"
 
+    // Storage writes (macOS -> iOS)
+    case commandSetUserDefault = "command.setUserDefault"
+    case commandRemoveUserDefault = "command.removeUserDefault"
+    case commandSetKeychain = "command.setKeychain"
+    case commandRemoveKeychain = "command.removeKeychain"
+    case commandSetCookie = "command.setCookie"
+    case commandRemoveCookie = "command.removeCookie"
+    case commandGetCookies = "command.getCookies"
+
+    // Input synthesis (macOS -> iOS)
+    case commandTap = "command.tap"
+    case commandSwipe = "command.swipe"
+    case commandTypeText = "command.typeText"
+
     // iOS -> macOS (responses)
     case responseFindElement = "response.findElement"
     case responseScreenText = "response.screenText"
     case responseSnapshot = "response.snapshot"
     case responseScreenshot = "response.screenshot"
     case responseScreenHTML = "response.screenHTML"
+    case responseCookies = "response.cookies"
+    case responseStorageWrite = "response.storageWrite"
+    case responseInput = "response.input"
 }

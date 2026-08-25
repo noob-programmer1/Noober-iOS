@@ -40,6 +40,20 @@ enum CommandHandler {
             handleScreenshot()
         case .commandScreenHTML:
             handleScreenHTML()
+        case .commandSetUserDefault:
+            handleSetUserDefault(message)
+        case .commandRemoveUserDefault:
+            handleRemoveUserDefault(message)
+        case .commandSetKeychain:
+            handleSetKeychain(message)
+        case .commandRemoveKeychain:
+            handleRemoveKeychain(message)
+        case .commandSetCookie:
+            handleSetCookie(message)
+        case .commandRemoveCookie:
+            handleRemoveCookie(message)
+        case .commandGetCookies:
+            handleGetCookies()
         case .commandTap:
             handleTap(message)
         case .commandSwipe:
@@ -307,6 +321,174 @@ enum CommandHandler {
         )
         if let message = try? CompanionMessage(type: .responseScreenshot, payload: response) {
             CompanionServer.shared.send(message)
+        }
+    }
+
+    // MARK: - Storage Writes
+
+    /// Reports the outcome of a write so the agent gets a real confirmation
+    /// instead of guessing from a follow-up read.
+    private static func reportStorageWrite(_ ok: Bool, _ detail: String) {
+        struct StorageWriteResponse: Codable {
+            let ok: Bool
+            let detail: String
+        }
+        if let msg = try? CompanionMessage(type: .responseStorageWrite,
+                                           payload: StorageWriteResponse(ok: ok, detail: detail)) {
+            CompanionServer.shared.send(msg)
+        }
+    }
+
+    private static func handleSetUserDefault(_ message: CompanionMessage) {
+        struct SetUserDefaultCommand: Decodable {
+            let key: String
+            let value: String
+        }
+        guard let cmd = try? message.decode(SetUserDefaultCommand.self) else {
+            reportStorageWrite(false, "Malformed setUserDefault command")
+            return
+        }
+        UserDefaultsStore.shared.setValue(cmd.value, forKey: cmd.key)
+        reportStorageWrite(true, "Set \(cmd.key)")
+    }
+
+    private static func handleRemoveUserDefault(_ message: CompanionMessage) {
+        struct RemoveUserDefaultCommand: Decodable {
+            let key: String
+        }
+        guard let cmd = try? message.decode(RemoveUserDefaultCommand.self) else {
+            reportStorageWrite(false, "Malformed removeUserDefault command")
+            return
+        }
+        UserDefaults.standard.removeObject(forKey: cmd.key)
+        UserDefaultsStore.shared.refresh()
+        reportStorageWrite(true, "Removed \(cmd.key)")
+    }
+
+    private static func handleSetKeychain(_ message: CompanionMessage) {
+        struct SetKeychainCommand: Decodable {
+            let account: String
+            let value: String
+            let service: String?
+            let itemClass: String?
+        }
+        guard let cmd = try? message.decode(SetKeychainCommand.self) else {
+            reportStorageWrite(false, "Malformed setKeychain command")
+            return
+        }
+        let itemClass: KeychainEntry.ItemClass =
+            (cmd.itemClass?.lowercased() == "internetpassword") ? .internetPassword : .genericPassword
+        let service = cmd.service ?? Bundle.main.bundleIdentifier ?? "Noober"
+
+        // Replace rather than duplicate: SecItemAdd fails on an existing account/service pair.
+        let existing = KeychainStore.shared.entries.first {
+            $0.account == cmd.account && $0.service == service && $0.itemClass == itemClass
+        }
+        KeychainStore.shared.saveItem(
+            account: cmd.account,
+            value: cmd.value,
+            service: service,
+            itemClass: itemClass,
+            originalEntry: existing
+        )
+        reportStorageWrite(true, "Set keychain item \(cmd.account) in \(service)")
+    }
+
+    private static func handleRemoveKeychain(_ message: CompanionMessage) {
+        struct RemoveKeychainCommand: Decodable {
+            let account: String
+            let service: String?
+        }
+        guard let cmd = try? message.decode(RemoveKeychainCommand.self) else {
+            reportStorageWrite(false, "Malformed removeKeychain command")
+            return
+        }
+        let matches = KeychainStore.shared.entries.filter {
+            $0.account == cmd.account && (cmd.service == nil || $0.service == cmd.service)
+        }
+        guard !matches.isEmpty else {
+            reportStorageWrite(false, "No keychain item for account \(cmd.account)")
+            return
+        }
+        matches.forEach { KeychainStore.shared.deleteEntry($0) }
+        reportStorageWrite(true, "Removed \(matches.count) keychain item(s) for \(cmd.account)")
+    }
+
+    // MARK: - Cookies
+
+    private static func handleSetCookie(_ message: CompanionMessage) {
+        struct SetCookieCommand: Decodable {
+            let name: String
+            let value: String
+            let domain: String
+            let path: String?
+            let isSecure: Bool?
+            let expiresInSeconds: Double?
+        }
+        guard let cmd = try? message.decode(SetCookieCommand.self) else {
+            reportStorageWrite(false, "Malformed setCookie command")
+            return
+        }
+
+        var properties: [HTTPCookiePropertyKey: Any] = [
+            .name: cmd.name,
+            .value: cmd.value,
+            .domain: cmd.domain,
+            .path: cmd.path ?? "/"
+        ]
+        if cmd.isSecure == true { properties[.secure] = "TRUE" }
+        if let ttl = cmd.expiresInSeconds {
+            properties[.expires] = Date().addingTimeInterval(ttl)
+        }
+
+        guard let cookie = HTTPCookie(properties: properties) else {
+            reportStorageWrite(false, "Could not build cookie \(cmd.name) for \(cmd.domain)")
+            return
+        }
+        HTTPCookieStorage.shared.setCookie(cookie)
+        reportStorageWrite(true, "Set cookie \(cmd.name) for \(cmd.domain)")
+    }
+
+    private static func handleRemoveCookie(_ message: CompanionMessage) {
+        struct RemoveCookieCommand: Decodable {
+            let name: String
+            let domain: String?
+        }
+        guard let cmd = try? message.decode(RemoveCookieCommand.self) else {
+            reportStorageWrite(false, "Malformed removeCookie command")
+            return
+        }
+        let matches = (HTTPCookieStorage.shared.cookies ?? []).filter {
+            $0.name == cmd.name && (cmd.domain == nil || $0.domain == cmd.domain)
+        }
+        guard !matches.isEmpty else {
+            reportStorageWrite(false, "No cookie named \(cmd.name)")
+            return
+        }
+        matches.forEach { HTTPCookieStorage.shared.deleteCookie($0) }
+        reportStorageWrite(true, "Removed \(matches.count) cookie(s) named \(cmd.name)")
+    }
+
+    private static func handleGetCookies() {
+        struct CookieData: Codable {
+            let name: String
+            let value: String
+            let domain: String
+            let path: String
+            let isSecure: Bool
+            let isHTTPOnly: Bool
+            let expiresAt: Date?
+        }
+        struct CookiesResponse: Codable {
+            let cookies: [CookieData]
+        }
+
+        let cookies = (HTTPCookieStorage.shared.cookies ?? []).map {
+            CookieData(name: $0.name, value: $0.value, domain: $0.domain, path: $0.path,
+                       isSecure: $0.isSecure, isHTTPOnly: $0.isHTTPOnly, expiresAt: $0.expiresDate)
+        }
+        if let msg = try? CompanionMessage(type: .responseCookies, payload: CookiesResponse(cookies: cookies)) {
+            CompanionServer.shared.send(msg)
         }
     }
 
